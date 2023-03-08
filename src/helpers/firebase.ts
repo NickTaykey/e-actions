@@ -7,6 +7,7 @@ import {
  PUBLIC_FIREBASE_APP_ID,
 } from '$env/static/public';
 import { initializeApp } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
  messagingSenderId: PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
@@ -18,5 +19,8 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+export { db };
 
 export default app;
