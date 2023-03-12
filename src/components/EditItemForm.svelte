@@ -1,22 +1,16 @@
 <script lang="ts">
- import { addItem } from '../helpers/items.store';
+ import { selectedItem, updateItem } from '../helpers/items.store';
+
+ let { id, name, description, categories, minPrice } = $selectedItem!;
 
  let showErrorAlert = false;
-
- let categories: string[] = [''];
- let description = '';
- let minPrice = 10;
- let name = '';
-
  const handleFormSubmit = async (e: SubmitEvent) => {
   try {
-   await addItem({ categories, description, name, minPrice });
-   window.alert('Item successfully posted!');
+   await updateItem(id, { name, description, categories, minPrice });
   } catch (e) {
    showErrorAlert = true;
   }
  };
-
  const handleAddCategory = () => (categories = [...categories, '']);
 </script>
 
@@ -31,6 +25,7 @@
    <input type="text" bind:value={name} />
   </label>
  </div>
+
  <div>
   <label>
    Description:
@@ -51,6 +46,7 @@
    </label>
   {/each}
   <button type="button" on:click={handleAddCategory}>Add Category</button>
+  <button type="button">Add Category</button>
  </div>
- <button type="submit">Publish Item</button>
+ <button type="submit">Update Item</button>
 </form>
