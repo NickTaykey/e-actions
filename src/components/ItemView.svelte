@@ -1,7 +1,8 @@
 <script lang="ts">
  import { deleteItem, selectedItem } from '../helpers/items.store';
  import { getAuth, onAuthStateChanged } from 'firebase/auth';
- import EditItemForm from './EditItemForm.svelte';
+ import { ItemFormTypes } from '../helpers/types';
+ import ItemForm from './ItemForm.svelte';
  import { goto } from '$app/navigation';
 
  import type { User } from 'firebase/auth';
@@ -45,5 +46,5 @@
 {/if}
 
 {#if showEditItemForm}
- <EditItemForm />
+ <ItemForm type={ItemFormTypes.EDIT} />
 {/if}

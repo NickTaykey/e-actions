@@ -1,5 +1,10 @@
 import type { FieldValue } from 'firebase/firestore';
 
+export enum ItemFormTypes {
+ NEW,
+ EDIT,
+}
+
 export interface ItemFields {
  name: string;
  description: string;
