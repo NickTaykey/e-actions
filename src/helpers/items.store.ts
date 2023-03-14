@@ -40,6 +40,7 @@ export const addItem = async (newItem: ItemFields) => {
     ...newItem,
     createdAt: serverTimestamp(),
     userId: currentUser.uid,
+    views: 0,
    };
 
    try {
@@ -86,6 +87,7 @@ export const loadItems = () => {
       userId: itemData.userId as string,
       name: itemData.name as string,
       createdAt: itemData.createdAt,
+      views: itemData.views,
       id: doc.id,
      });
     }

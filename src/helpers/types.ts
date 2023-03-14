@@ -13,6 +13,7 @@ export interface ItemFields {
 }
 
 export interface ItemFirebaseInput extends ItemFields {
+ views: number;
  createdAt: FieldValue;
  userId: string;
 }
