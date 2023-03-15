@@ -1,5 +1,7 @@
 <script lang="ts">
  import { selectedItem } from '../../../helpers/items.store';
+ import { getAuth, onAuthStateChanged } from 'firebase/auth';
+ import { signOutUser, signInUser } from '../../../helpers';
  import ItemView from '../../../components/ItemView.svelte';
  import { doc, getDoc } from 'firebase/firestore';
  import { db } from '../../../helpers/firebase';
@@ -9,6 +11,11 @@
  import type { PageData } from './$types';
 
  export let data: PageData;
+
+ onAuthStateChanged(getAuth(), (user) => {
+  if (user !== null) signInUser(user);
+  else signOutUser();
+ });
 
  onMount(async () => {
   if ($selectedItem === null) {

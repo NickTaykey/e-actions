@@ -36,14 +36,11 @@
   try {
    const itemId = window.location.pathname.split('/').at(-1)!;
    const docRef = doc(db, 'items', itemId);
-   const { currentUser } = getAuth();
 
    if ($selectedItem === null) {
     $selectedItem = (await getDoc(docRef)).data() as Item;
    }
-   if (currentUser !== null) {
-    updateDoc(docRef, { views: increment(1) });
-   }
+   await updateDoc(docRef, { views: increment(1) });
   } catch (e) {
    errorAlertMessage =
     'Unexpected server side error, we are unable to display the item.';

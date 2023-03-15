@@ -109,23 +109,34 @@ export const updateItem = (itemId: string, newItem: ItemFields) => {
  return new Promise<void>(
   async (resolve: () => void, reject: (e: unknown) => void) => {
    try {
-    const { userId, createdAt } = get(items).get(itemId)!;
+    const itemToUpdate = get(selectedItem);
+    if (itemToUpdate === null) throw new Error('Item to update not found');
+
     const docRef = doc(db, 'items', itemId);
     await updateDoc(docRef, { ...newItem });
 
+    selectedItem.set({
+     ...itemToUpdate,
+     ...newItem,
+    } as Item);
+
     _items.update((items) => {
+     if (items.size === 0) return items;
+
      const newMap = new Map(items);
      const item = {
+      createdAt: itemToUpdate.createdAt,
       description: newItem.description,
       categories: newItem.categories,
+      userId: itemToUpdate.userId,
       minPrice: newItem.minPrice,
       name: newItem.name,
       id: itemId,
-      createdAt,
-      userId,
      } as Item;
+
      newMap.set(itemId, item);
      selectedItem.set(item);
+
      return Object.freeze(newMap);
     });
 
@@ -146,11 +157,14 @@ export const deleteItem = (itemId: string) => {
   async (resolve: () => void, reject: (e: unknown) => void) => {
    try {
     await deleteDoc(doc(db, 'items', itemId));
+
     _items.update((items) => {
+     if (items.size === 0) return items;
      const newMap = new Map(items);
      newMap.delete(itemId);
      return Object.freeze(newMap);
     });
+
     selectedItem.set(null);
     resolve();
    } catch (e) {

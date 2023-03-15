@@ -1,7 +1,7 @@
 <script lang="ts">
  import { addItem, selectedItem, updateItem } from '../helpers/items.store';
- import { validateFormFields } from '../helpers/helpers';
  import { ItemFormTypes } from '../helpers/types';
+ import { validateFormFields } from '../helpers';
 
  export let type: ItemFormTypes;
 

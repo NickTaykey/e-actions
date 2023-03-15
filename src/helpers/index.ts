@@ -1,4 +1,21 @@
+import { derived, writable } from 'svelte/store';
+
+import type { User } from 'firebase/auth';
 import type { ItemFields } from './types';
+
+const _currentUser = writable<User | null>(null);
+
+export const currentUser = derived(_currentUser, ($_currentUser) => {
+ return $_currentUser;
+});
+
+export const signOutUser = () => {
+ _currentUser.set(null);
+};
+
+export const signInUser = (user: User) => {
+ _currentUser.set(Object.freeze(user));
+};
 
 export const validateFormFields = (fields: ItemFields) => {
  const invalidCategoriesIndexes: number[] = [];
