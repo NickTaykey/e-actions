@@ -1,23 +1,18 @@
 <script lang="ts">
  import { doc, getDoc, increment, updateDoc } from 'firebase/firestore';
  import { deleteItem, selectedItem } from '../helpers/items.store';
- import { getAuth, onAuthStateChanged } from 'firebase/auth';
  import { ItemFormTypes } from '../helpers/types';
  import ItemForm from './ItemForm.svelte';
  import { db } from '../helpers/firebase';
  import { goto } from '$app/navigation';
+ import seedDB from '../helpers/seeds';
  import { onMount } from 'svelte';
 
  import type { Item } from '../helpers/types';
- import type { User } from 'firebase/auth';
+ import { currentUser } from '../helpers';
 
- let currentUser: User | null;
  let showEditItemForm = false;
  let errorAlertMessage = '';
-
- onAuthStateChanged(getAuth(), (user) => {
-  currentUser = user;
- });
 
  const handleDeleteItem = async () => {
   if ($selectedItem === null) return;
@@ -58,7 +53,7 @@
  <h2>Min. Offer: ${$selectedItem.minPrice}</h2>
  <p>{$selectedItem.description}</p>
  <div>{$selectedItem.categories.join(', ')}</div>
- {#if currentUser && $selectedItem.userId === currentUser.uid}
+ {#if $currentUser && $selectedItem.userId === $currentUser.uid}
   <button on:click={toggleEditItemForm}>
    {showEditItemForm ? 'Close' : 'Edit'}
   </button>

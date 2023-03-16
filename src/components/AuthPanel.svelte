@@ -8,7 +8,7 @@
   signInWithPopup,
   getAuth,
  } from 'firebase/auth';
- import { signInUser } from '../helpers';
+ import { signInUser } from '../helpers/index';
  import _ from '../helpers/firebase';
 
  import type { User } from 'firebase/auth';
