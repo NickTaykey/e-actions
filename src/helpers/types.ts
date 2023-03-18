@@ -21,3 +21,8 @@ export interface ItemFirebaseInput extends ItemFields {
 export interface Item extends ItemFirebaseInput {
  id: string;
 }
+
+export enum ChangePageBehaviour {
+ NEXT,
+ PREV,
+}

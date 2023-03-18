@@ -18,7 +18,7 @@ const seedDB = async () => {
   auctionItems.push({
    name: faker.commerce.productName(),
    description: faker.lorem.sentences(),
-   views: 0,
+   views: Math.trunc(Math.random() * 100),
    minPrice: faker.datatype.number({ min: 1, max: 100 }),
    createdAt: serverTimestamp(),
    categories: new Array(4)
@@ -30,9 +30,9 @@ const seedDB = async () => {
  const docRefs = await Promise.all(
   auctionItems.map((item) => addDoc(collection(db, 'items'), item))
  );
- const items = await Promise.all(docRefs.map((ref) => getDoc(ref)));
+ const itemDocs = await Promise.all(docRefs.map((ref) => getDoc(ref)));
  const itemsMap = new Map(
-  items.map((item) => [item.id, { ...item.data(), id: item.id } as Item])
+  itemDocs.map((item) => [item.id, { ...item.data(), id: item.id } as Item])
  );
  _items.set(itemsMap);
 };

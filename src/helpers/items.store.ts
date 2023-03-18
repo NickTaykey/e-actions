@@ -1,29 +1,52 @@
 import {
+ getCountFromServer,
  serverTimestamp,
+ QuerySnapshot,
  getFirestore,
+ startAfter,
  collection,
  updateDoc,
  deleteDoc,
  getDocs,
  orderBy,
  addDoc,
+ getDoc,
  limit,
  query,
  doc,
 } from 'firebase/firestore';
 import { derived, get, writable } from 'svelte/store';
+import { ChangePageBehaviour } from './types';
 import { getAuth } from 'firebase/auth';
 import { db } from './firebase';
 
-import type { Item, ItemFields, ItemFirebaseInput } from './types';
+import type { ItemFirebaseInput, ItemFields, Item } from '../helpers/types';
+import type { DocumentData } from 'firebase/firestore';
+
+export const itemsPerPage = 9;
 
 export const selectedItem = writable<Item | null>(null);
 
 export const _items = writable<Map<string, Item>>(
  Object.freeze(new Map<string, Item>())
 );
+export const items = derived(_items, ($_items) => {
+ return $_items;
+});
 
-export const items = derived(_items, ($_items) => $_items);
+const _currentPageNumber = writable(1);
+
+export const currentPageNumber = derived(
+ _currentPageNumber,
+ ($_currentPageNumber) => $_currentPageNumber
+);
+
+const _nItemsPublished = writable<number>(0);
+
+export const nItemsPublished = derived(
+ _nItemsPublished,
+ ($_nItemsPublished) => $_nItemsPublished
+);
 
 export const addItem = async (newItem: ItemFields) => {
  return new Promise<void>(
@@ -74,25 +97,19 @@ export const loadItems = () => {
   async (resolve: () => void, reject: (e: unknown) => void) => {
    try {
     const collectionRef = collection(db, 'items');
-    const docsQuery = query(collectionRef, orderBy('createdAt'), limit(9));
-    const docs = Array.from((await getDocs(docsQuery)).docs);
-    const itemsMap = new Map<string, Item>();
+    const docsQuery = query(
+     collectionRef,
+     orderBy('views', 'desc'),
+     limit(itemsPerPage)
+    );
 
-    for (const doc of docs) {
-     const itemData = doc.data();
-     itemsMap.set(doc.id, {
-      description: itemData.description as string,
-      categories: itemData.categories as string[],
-      minPrice: itemData.minPrice as number,
-      userId: itemData.userId as string,
-      name: itemData.name as string,
-      createdAt: itemData.createdAt,
-      views: itemData.views,
-      id: doc.id,
-     });
-    }
+    const [countSnapshot, querySnapshot] = await Promise.all([
+     getCountFromServer(collectionRef),
+     getDocs(docsQuery),
+    ]);
 
-    _items.set(Object.freeze(itemsMap));
+    _nItemsPublished.set(countSnapshot.data().count);
+    setItems(querySnapshot);
     resolve();
    } catch (e) {
     reject(e);
@@ -176,4 +193,66 @@ export const deleteItem = (itemId: string) => {
    }
   }
  );
+};
+
+export const loadPage = (behaviour: ChangePageBehaviour) => {
+ return new Promise<void>(
+  async (resolve: () => void, reject: (e: unknown) => void) => {
+   try {
+    if (behaviour === ChangePageBehaviour.NEXT) {
+     const collectionRef = collection(db, 'items');
+     const lastPageItemRef = doc(
+      db,
+      'items',
+      Array.from(get(items).keys()).at(-1)!
+     );
+     const lastItemSnapshot = await getDoc(lastPageItemRef);
+     const docsQuery = query(
+      collectionRef,
+      orderBy('views', 'desc'),
+      limit(itemsPerPage),
+      startAfter(lastItemSnapshot)
+     );
+     const querySnapshot = await getDocs(docsQuery);
+     _currentPageNumber.update((currentPageNumber) => currentPageNumber + 1);
+     setItems(querySnapshot);
+    }
+
+    if (behaviour === ChangePageBehaviour.PREV) {
+     _currentPageNumber.update((currentPageNumber) => currentPageNumber - 1);
+    }
+
+    resolve();
+   } catch (e) {
+    reject(e);
+    console.error(e);
+    throw new Error(
+     'Unexpected error while loading documents from Firebase Cloud Store'
+    );
+   }
+  }
+ );
+};
+
+const setItems = (querySnapshot: QuerySnapshot<DocumentData>) => {
+ const docs = Array.from(querySnapshot.docs);
+ const itemsMap = new Map<string, Item>(get(_items));
+ const newIds = [];
+
+ for (const doc of docs) {
+  const itemData = doc.data();
+  itemsMap.set(doc.id, {
+   description: itemData.description as string,
+   categories: itemData.categories as string[],
+   minPrice: itemData.minPrice as number,
+   userId: itemData.userId as string,
+   name: itemData.name as string,
+   createdAt: itemData.createdAt,
+   views: itemData.views,
+   id: doc.id,
+  });
+  newIds.push(doc.id);
+ }
+
+ _items.set(Object.freeze(itemsMap));
 };

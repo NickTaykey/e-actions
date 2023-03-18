@@ -1,6 +1,19 @@
 <script lang="ts">
- import { items } from '../helpers/items.store';
+ import {
+  currentPageNumber,
+  itemsPerPage,
+  items,
+ } from '../helpers/items.store';
+ let currentPageItemsIds: string[] = [];
  let showErrorAlert = false;
+
+ $: {
+  const startIndex = itemsPerPage * ($currentPageNumber - 1);
+  currentPageItemsIds = Array.from($items.keys()).slice(
+   startIndex,
+   startIndex + itemsPerPage + 1
+  );
+ }
 </script>
 
 <div>
@@ -11,12 +24,13 @@
    published on auctions.
   </p>
  {:else}
-  {#each Array.from($items.values()) as item}
+  {#each currentPageItemsIds as itemId}
    <div>
-    <h3>{item.name}</h3>
-    <p>{item.description}</p>
-    <div>{item.categories.join(', ')}</div>
-    <a href={`/items/${item.id}`}>Learn More</a>
+    <h3>{$items.get(itemId)?.name}</h3>
+    <p>{$items.get(itemId)?.description}</p>
+    <div>{$items.get(itemId)?.views}</div>
+    <div>{$items.get(itemId)?.categories.join(', ')}</div>
+    <a href={`/items/${$items.get(itemId)?.id}`}>Learn More</a>
    </div>
   {/each}
  {/if}

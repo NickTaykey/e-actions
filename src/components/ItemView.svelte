@@ -4,12 +4,12 @@
  import { ItemFormTypes } from '../helpers/types';
  import ItemForm from './ItemForm.svelte';
  import { db } from '../helpers/firebase';
+ import { currentUser } from '../helpers';
  import { goto } from '$app/navigation';
- import seedDB from '../helpers/seeds';
+ // import seedDB from '../helpers/seeds';
  import { onMount } from 'svelte';
 
  import type { Item } from '../helpers/types';
- import { currentUser } from '../helpers';
 
  let showEditItemForm = false;
  let errorAlertMessage = '';
