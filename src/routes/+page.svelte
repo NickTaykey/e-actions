@@ -1,14 +1,14 @@
 <script lang="ts">
  import { currentUser, signInUser, signOutUser } from '../helpers/index';
- import PagesController from '../components/PagesController.svelte';
+ import HottestItemsView from '../components/HottestItemsView.svelte';
  import { getAuth, onAuthStateChanged } from 'firebase/auth';
  import { loadItems, items } from '../helpers/items.store';
  import AuthPanel from '../components/AuthPanel.svelte';
- import ItemsView from '../components/ItemsView.svelte';
  import ItemForm from '../components/ItemForm.svelte';
  import { ItemFormTypes } from '../helpers/types';
  // import seedDB from '../helpers/seeds';
  import { onMount } from 'svelte';
+ import LatestItemsView from '../components/LatestItemsView.svelte';
 
  const auth = getAuth();
 
@@ -36,7 +36,5 @@
  <AuthPanel />
 {/if}
 
-<h2>Hottest items for sale!</h2>
-<ItemsView />
-
-<PagesController />
+<HottestItemsView />
+<LatestItemsView />

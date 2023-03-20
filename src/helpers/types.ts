@@ -23,6 +23,7 @@ export interface Item extends ItemFirebaseInput {
 }
 
 export enum ChangePageBehaviour {
+ INITIAL,
  NEXT,
  PREV,
 }

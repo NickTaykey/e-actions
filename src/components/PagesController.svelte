@@ -1,28 +1,22 @@
 <script lang="ts">
- import {
-  nItemsPublished,
-  itemsPerPage,
-  loadPage,
-  currentPageNumber,
- } from '../helpers/items.store';
- import { ChangePageBehaviour } from '../helpers/types';
+ import { nItemsPublished, itemsPerPage } from '../helpers/items.store';
 
- const handleChangePageClick = (behaviour: ChangePageBehaviour) => {
-  return () => loadPage(behaviour);
- };
+ export let hanldeNextPageClick = () => {};
+ export let hanldePrevPageClick = () => {};
+ export let currentPageNumber = 1;
 </script>
 
 <div class="page-controller">
- {#if $currentPageNumber > 1}
-  <button on:click={handleChangePageClick(ChangePageBehaviour.PREV)}>
+ {#if currentPageNumber > 1}
+  <button on:click={hanldePrevPageClick}>
    {'<'}
   </button>
  {/if}
  {#each Array(Math.ceil($nItemsPublished / itemsPerPage)) as _, i}
-  <div>{i + 1}</div>
+  <div class={currentPageNumber === i + 1 ? 'current-page' : ''}>{i + 1}</div>
  {/each}
- {#if $currentPageNumber < Math.ceil($nItemsPublished / itemsPerPage)}
-  <button on:click={handleChangePageClick(ChangePageBehaviour.NEXT)}>
+ {#if currentPageNumber < Math.ceil($nItemsPublished / itemsPerPage)}
+  <button on:click={hanldeNextPageClick}>
    {'>'}
   </button>
  {/if}
@@ -31,5 +25,8 @@
 <style>
  .page-controller {
   display: flex;
+ }
+ .current-page {
+  color: red;
  }
 </style>
