@@ -1,14 +1,17 @@
 <script lang="ts">
- import { doc, getDoc, increment, updateDoc } from 'firebase/firestore';
- import { deleteItem, selectedItem } from '../helpers/items.store';
- import { ItemFormTypes } from '../helpers/types';
+ import {
+  loadCurrentItem,
+  selectedItem,
+  deleteItem,
+ } from '../helpers/items.store';
+ import { loadItemQuestions, questions } from '../helpers/questions.store';
+ import QuestionForm from './QuestionForm.svelte';
+ import { FormTypes } from '../helpers/types';
  import ItemForm from './ItemForm.svelte';
- import { db } from '../helpers/firebase';
  import { currentUser } from '../helpers';
  import { goto } from '$app/navigation';
  import { onMount } from 'svelte';
-
- import type { Item } from '../helpers/types';
+ import QuestionView from './QuestionView.svelte';
 
  let showEditItemForm = false;
  let errorAlertMessage = '';
@@ -28,13 +31,8 @@
 
  onMount(async () => {
   try {
-   const itemId = window.location.pathname.split('/').at(-1)!;
-   const docRef = doc(db, 'items', itemId);
-
-   if ($selectedItem === null) {
-    $selectedItem = (await getDoc(docRef)).data() as Item;
-   }
-   await updateDoc(docRef, { views: increment(1) });
+   await loadCurrentItem();
+   loadItemQuestions($selectedItem!.id);
   } catch (e) {
    errorAlertMessage =
     'Unexpected server side error, we are unable to display the item.';
@@ -57,9 +55,14 @@
    {showEditItemForm ? 'Close' : 'Edit'}
   </button>
   <button on:click={handleDeleteItem}>Delete</button>
+  {#if showEditItemForm}
+   <ItemForm type={FormTypes.EDIT} />
+  {/if}
  {/if}
-{/if}
-
-{#if showEditItemForm}
- <ItemForm type={ItemFormTypes.EDIT} />
+ {#if $currentUser !== null}
+  <QuestionForm type={FormTypes.NEW} />
+ {/if}
+ {#each $questions as question}
+  <QuestionView {question} />
+ {/each}
 {/if}

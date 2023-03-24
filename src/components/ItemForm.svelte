@@ -1,16 +1,16 @@
 <script lang="ts">
  import { addItem, selectedItem, updateItem } from '../helpers/items.store';
  import { validateFormFields } from '../helpers/index';
- import { ItemFormTypes } from '../helpers/types';
+ import { FormTypes } from '../helpers/types';
 
- export let type: ItemFormTypes;
+ export let type: FormTypes;
 
  let categories: string[] = [''];
  let description = '';
  let minPrice = 10;
  let name = '';
 
- if (type === ItemFormTypes.EDIT && $selectedItem !== null) {
+ if (type === FormTypes.EDIT && $selectedItem !== null) {
   description = $selectedItem.description;
   categories = $selectedItem.categories;
   minPrice = $selectedItem.minPrice;
@@ -32,7 +32,7 @@
   if (!validationData.areFieldsValid) return;
 
   try {
-   if (type === ItemFormTypes.NEW) {
+   if (type === FormTypes.NEW) {
     await addItem(fields);
     window.alert('Item successfully posted!');
    } else if ($selectedItem) {
@@ -114,7 +114,7 @@
   <button type="button" on:click={handleAddCategory}>Add Category</button>
  </div>
  <button type="submit">
-  {type === ItemFormTypes.NEW ? 'Publish' : 'Update'}
+  {type === FormTypes.NEW ? 'Publish' : 'Update'}
  </button>
 </form>
 

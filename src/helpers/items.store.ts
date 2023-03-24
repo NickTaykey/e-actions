@@ -1,6 +1,6 @@
 import { derived, get, writable } from 'svelte/store';
 import * as firebase from 'firebase/firestore';
-import { ChangePageBehaviour } from './types';
+import { ChangePageBehaviour, type Question } from './types';
 import { getAuth } from 'firebase/auth';
 import { db } from './firebase';
 
@@ -70,6 +70,7 @@ export const setItems = (
    userId: itemData.userId as string,
    name: itemData.name as string,
    createdAt: itemData.createdAt,
+   questions: itemData.questions,
    views: itemData.views,
    id: doc.id,
   });
@@ -132,6 +133,7 @@ export const addItem = async (newItem: ItemFields) => {
 
      newMap.set(docRef.id, {
       ...inputData,
+      questions: [],
       id: docRef.id,
      });
 
@@ -181,10 +183,12 @@ export const updateItem = (itemId: string, newItem: ItemFields) => {
     const docRef = firebase.doc(db, 'items', itemId);
     await firebase.updateDoc(docRef, { ...newItem });
 
-    selectedItem.set({
-     ...itemToUpdate,
-     ...newItem,
-    } as Item);
+    selectedItem.set(
+     Object.freeze({
+      ...itemToUpdate,
+      ...newItem,
+     } as Item)
+    );
 
     _items.update((items) => {
      if (items.size === 0) return items;
@@ -201,7 +205,7 @@ export const updateItem = (itemId: string, newItem: ItemFields) => {
      } as Item;
 
      newMap.set(itemId, item);
-     selectedItem.set(item);
+     selectedItem.set(Object.freeze(item));
 
      return Object.freeze(newMap);
     });
@@ -253,6 +257,36 @@ export const loadPage = (behaviour: ChangePageBehaviour) => {
      handleItemsLoading(behaviour, 'createdAt'),
     ]);
     setItems(...snapshot);
+    resolve();
+   } catch (e) {
+    reject(e);
+    console.error(e);
+    throw new Error(
+     'Unexpected error while loading documents from Firebase Cloud Store'
+    );
+   }
+  }
+ );
+};
+
+export const loadCurrentItem = () => {
+ return new Promise<void>(
+  async (resolve: () => void, reject: (e: unknown) => void) => {
+   try {
+    const itemId = window.location.pathname.split('/').at(-1)!;
+    const docRef = firebase.doc(db, 'items', itemId);
+    const promises: Promise<any>[] = [
+     firebase.updateDoc(docRef, { views: firebase.increment(1) }),
+    ];
+    if (get(selectedItem) === null) promises.push(firebase.getDoc(docRef));
+    const resolvedPromises = await Promise.all(promises);
+    if (get(selectedItem) === null) {
+     const itemData = resolvedPromises[1].data() as Item | undefined;
+     if (itemData === undefined) {
+      throw new Error(`No items with id: ${itemId} was found!`);
+     }
+     selectedItem.set(itemData);
+    }
     resolve();
    } catch (e) {
     reject(e);

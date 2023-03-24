@@ -1,6 +1,6 @@
 import type { FieldValue } from 'firebase/firestore';
 
-export enum ItemFormTypes {
+export enum FormTypes {
  NEW,
  EDIT,
 }
@@ -20,10 +20,22 @@ export interface ItemFirebaseInput extends ItemFields {
 
 export interface Item extends ItemFirebaseInput {
  id: string;
+ questions: string[];
 }
 
 export enum ChangePageBehaviour {
  INITIAL,
  NEXT,
  PREV,
+}
+
+export interface QuestionFields {
+ text: string;
+ createdAt: FieldValue;
+ userId: string;
+}
+
+export interface Question extends QuestionFields {
+ id: string;
+ updated: boolean;
 }

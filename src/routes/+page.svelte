@@ -1,14 +1,14 @@
 <script lang="ts">
  import { currentUser, signInUser, signOutUser } from '../helpers/index';
  import HottestItemsView from '../components/HottestItemsView.svelte';
+ import LatestItemsView from '../components/LatestItemsView.svelte';
  import { getAuth, onAuthStateChanged } from 'firebase/auth';
  import { loadItems, items } from '../helpers/items.store';
  import AuthPanel from '../components/AuthPanel.svelte';
  import ItemForm from '../components/ItemForm.svelte';
- import { ItemFormTypes } from '../helpers/types';
+ import { FormTypes } from '../helpers/types';
  // import seedDB from '../helpers/seeds';
  import { onMount } from 'svelte';
- import LatestItemsView from '../components/LatestItemsView.svelte';
 
  const auth = getAuth();
 
@@ -31,7 +31,7 @@
 {#if $currentUser !== null}
  <p>Welcome, {$currentUser.email}!</p>
  <button on:click={() => auth.signOut()}>Sign Out</button>
- <ItemForm type={ItemFormTypes.NEW} />
+ <ItemForm type={FormTypes.NEW} />
 {:else}
  <AuthPanel />
 {/if}

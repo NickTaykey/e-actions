@@ -20,6 +20,7 @@ const seedDB = async () => {
    description: faker.lorem.sentences(),
    views: Math.trunc(Math.random() * 100),
    minPrice: faker.datatype.number({ min: 1, max: 100 }),
+   questions: [],
    createdAt: serverTimestamp(),
    categories: new Array(4)
     .fill(null)

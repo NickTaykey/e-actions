@@ -4,10 +4,11 @@
   hottestItemsIds,
   itemsPerPage,
   setItems,
-  items,
  } from '../helpers/items.store';
+ import ItemsListErrorAlert from './ItemsListErrorAlert.svelte';
  import { ChangePageBehaviour } from '../helpers/types';
  import PagesController from './PagesController.svelte';
+ import ItemListsView from './ItemListsView.svelte';
 
  let currentPageItemsIds: string[] = [];
  let showErrorAlert = false;
@@ -34,21 +35,9 @@
 <div>
  <h2>Hottest items for sale!</h2>
  {#if showErrorAlert}
-  <h1>HTTP 500 Error</h1>
-  <p>
-   Unexpected server side error, we are unable to retreive the last items
-   published on auctions.
-  </p>
+  <ItemsListErrorAlert />
  {:else}
-  {#each currentPageItemsIds as itemId}
-   <div>
-    <h3>{$items.get(itemId)?.name}</h3>
-    <p>{$items.get(itemId)?.description}</p>
-    <div>{$items.get(itemId)?.views}</div>
-    <div>{$items.get(itemId)?.categories.join(', ')}</div>
-    <a href={`/items/${$items.get(itemId)?.id}`}>Learn More</a>
-   </div>
-  {/each}
+  <ItemListsView {currentPageItemsIds} />
  {/if}
 </div>
 
