@@ -5,13 +5,13 @@
   deleteItem,
  } from '../helpers/items.store';
  import { loadItemQuestions, questions } from '../helpers/questions.store';
+ import QuestionView from './QuestionView.svelte';
  import QuestionForm from './QuestionForm.svelte';
  import { FormTypes } from '../helpers/types';
  import ItemForm from './ItemForm.svelte';
  import { currentUser } from '../helpers';
  import { goto } from '$app/navigation';
  import { onMount } from 'svelte';
- import QuestionView from './QuestionView.svelte';
 
  let showEditItemForm = false;
  let errorAlertMessage = '';
@@ -32,7 +32,7 @@
  onMount(async () => {
   try {
    await loadCurrentItem();
-   loadItemQuestions($selectedItem!.id);
+   loadItemQuestions();
   } catch (e) {
    errorAlertMessage =
     'Unexpected server side error, we are unable to display the item.';

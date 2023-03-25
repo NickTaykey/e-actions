@@ -34,9 +34,13 @@
   try {
    if (type === FormTypes.NEW) {
     await addItem(fields);
+    categories = [''];
+    description = '';
+    minPrice = 10;
+    name = '';
     window.alert('Item successfully posted!');
    } else if ($selectedItem) {
-    await updateItem($selectedItem.id, {
+    await updateItem({
      description,
      categories,
      minPrice,

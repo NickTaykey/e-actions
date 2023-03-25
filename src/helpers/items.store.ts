@@ -1,6 +1,6 @@
 import { derived, get, writable } from 'svelte/store';
 import * as firebase from 'firebase/firestore';
-import { ChangePageBehaviour, type Question } from './types';
+import { ChangePageBehaviour } from './types';
 import { getAuth } from 'firebase/auth';
 import { db } from './firebase';
 
@@ -55,6 +55,7 @@ export const setItems = (
  const latestItemsDocs = latestItemsSnapshot
   ? Array.from(latestItemsSnapshot.docs)
   : [];
+
  const itemsMap = new Map<string, Item>(get(_items));
 
  const itemsWithoutDuplicates = [
@@ -95,6 +96,7 @@ export const handleItemsLoading = async (
   firebase.orderBy(sortField, 'desc'),
   firebase.limit(itemsPerPage),
  ];
+
  if (behaviour === ChangePageBehaviour.NEXT) {
   const lastItemId = get(
    sortField === 'createdAt' ? latestItemsIds : hottestItemsIds
@@ -103,9 +105,11 @@ export const handleItemsLoading = async (
   const lastItemSnapshot = await firebase.getDoc(lastPageItemRef);
   queryComponents.push(firebase.startAfter(lastItemSnapshot));
  }
+
  const querySnapshot = await firebase.getDocs(
   firebase.query(firebaseCollection, ...queryComponents)
  );
+
  return querySnapshot;
 };
 
@@ -130,15 +134,19 @@ export const addItem = async (newItem: ItemFields) => {
 
     _items.update((items) => {
      const newMap = new Map(items);
-
      newMap.set(docRef.id, {
       ...inputData,
-      questions: [],
       id: docRef.id,
+      questions: [],
      });
-
      return Object.freeze(newMap);
     });
+
+    _hottestItemsIds.update((hottestItemsIds) => [
+     ...hottestItemsIds,
+     docRef.id,
+    ]);
+    _latestItemsIds.update((latestItemsIds) => [docRef.id, ...latestItemsIds]);
 
     resolve();
    } catch (e) {
@@ -160,7 +168,9 @@ export const loadItems = () => {
      firebase.getCountFromServer(firebaseCollection),
      loadPage(ChangePageBehaviour.INITIAL),
     ]);
+
     _nItemsPublished.set(countSnapshot.data().count);
+
     resolve();
    } catch (e) {
     reject(e);
@@ -173,14 +183,14 @@ export const loadItems = () => {
  );
 };
 
-export const updateItem = (itemId: string, newItem: ItemFields) => {
+export const updateItem = (newItem: ItemFields) => {
  return new Promise<void>(
   async (resolve: () => void, reject: (e: unknown) => void) => {
    try {
     const itemToUpdate = get(selectedItem);
     if (itemToUpdate === null) throw new Error('Item to update not found');
 
-    const docRef = firebase.doc(db, 'items', itemId);
+    const docRef = firebase.doc(db, 'items', itemToUpdate.id);
     await firebase.updateDoc(docRef, { ...newItem });
 
     selectedItem.set(
@@ -200,11 +210,11 @@ export const updateItem = (itemId: string, newItem: ItemFields) => {
       categories: newItem.categories,
       userId: itemToUpdate.userId,
       minPrice: newItem.minPrice,
+      id: itemToUpdate.id,
       name: newItem.name,
-      id: itemId,
      } as Item;
 
-     newMap.set(itemId, item);
+     newMap.set(itemToUpdate.id, item);
      selectedItem.set(Object.freeze(item));
 
      return Object.freeze(newMap);
@@ -256,7 +266,9 @@ export const loadPage = (behaviour: ChangePageBehaviour) => {
      handleItemsLoading(behaviour, 'views'),
      handleItemsLoading(behaviour, 'createdAt'),
     ]);
+
     setItems(...snapshot);
+
     resolve();
    } catch (e) {
     reject(e);
@@ -278,8 +290,11 @@ export const loadCurrentItem = () => {
     const promises: Promise<any>[] = [
      firebase.updateDoc(docRef, { views: firebase.increment(1) }),
     ];
+
     if (get(selectedItem) === null) promises.push(firebase.getDoc(docRef));
+
     const resolvedPromises = await Promise.all(promises);
+
     if (get(selectedItem) === null) {
      const itemData = resolvedPromises[1].data() as Item | undefined;
      if (itemData === undefined) {
@@ -287,6 +302,7 @@ export const loadCurrentItem = () => {
      }
      selectedItem.set(itemData);
     }
+
     resolve();
    } catch (e) {
     reject(e);

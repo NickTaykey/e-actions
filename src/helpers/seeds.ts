@@ -1,9 +1,4 @@
-import {
- serverTimestamp,
- collection,
- addDoc,
- getDoc,
-} from 'firebase/firestore';
+import * as firebase from 'firebase/firestore';
 import { faker } from '@faker-js/faker';
 import { _items } from './items.store';
 import { currentUser } from './index';
@@ -14,27 +9,33 @@ import type { ItemFirebaseInput, Item } from './types';
 
 const seedDB = async () => {
  const auctionItems: ItemFirebaseInput[] = [];
- for (let i = 0; i < 20; i++) {
+
+ for (let i = 0; i < 5; i++) {
   auctionItems.push({
    name: faker.commerce.productName(),
    description: faker.lorem.sentences(),
    views: Math.trunc(Math.random() * 100),
    minPrice: faker.datatype.number({ min: 1, max: 100 }),
    questions: [],
-   createdAt: serverTimestamp(),
+   createdAt: firebase.serverTimestamp(),
    categories: new Array(4)
     .fill(null)
     .map(() => faker.science.chemicalElement().name),
    userId: get(currentUser)!.uid,
   } as ItemFirebaseInput);
  }
+
  const docRefs = await Promise.all(
-  auctionItems.map((item) => addDoc(collection(db, 'items'), item))
+  auctionItems.map((item) =>
+   firebase.addDoc(firebase.collection(db, 'items'), item)
+  )
  );
- const itemDocs = await Promise.all(docRefs.map((ref) => getDoc(ref)));
+
+ const itemDocs = await Promise.all(docRefs.map((ref) => firebase.getDoc(ref)));
  const itemsMap = new Map(
   itemDocs.map((item) => [item.id, { ...item.data(), id: item.id } as Item])
  );
+
  _items.set(itemsMap);
 };
 

@@ -30,6 +30,7 @@ export enum ChangePageBehaviour {
 }
 
 export interface QuestionFields {
+ answer: string | null;
  text: string;
  createdAt: FieldValue;
  userId: string;
@@ -38,4 +39,5 @@ export interface QuestionFields {
 export interface Question extends QuestionFields {
  id: string;
  updated: boolean;
+ itemCreatorId: string;
 }
