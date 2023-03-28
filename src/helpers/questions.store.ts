@@ -1,26 +1,18 @@
 import { derived, get, writable } from 'svelte/store';
 import * as firebase from 'firebase/firestore';
 import { db } from './firebase';
+import { currentUser } from '.';
 
 import type { Item, Question } from './types';
-import { selectedItem } from './items.store';
-import { currentUser } from '.';
 
 const _questions = writable<readonly Question[]>(Object.freeze([]));
 export const questions = derived(_questions, ($_questions) => $_questions);
 
-export const addQuestion = (text: string) => {
+export const addQuestion = (text: string, item: Item) => {
  return new Promise<void>(
   async (resolve: () => void, reject: (e: unknown) => void) => {
    try {
-    const selectedItemObj = get(selectedItem);
     const currentUserObj = get(currentUser);
-
-    if (selectedItemObj === null) {
-     throw new Error(
-      'Unexpected null selectedItem, impossible to create a Question'
-     );
-    }
 
     if (currentUserObj === null) {
      throw new Error(
@@ -28,13 +20,13 @@ export const addQuestion = (text: string) => {
      );
     }
 
-    const itemRef = firebase.doc(db, 'items', selectedItemObj.id);
+    const itemRef = firebase.doc(db, 'items', item.id);
     const questionId = crypto.randomUUID();
 
     const itemData = (await firebase.getDoc(itemRef)).data();
 
     if (itemData === undefined) {
-     throw new Error(`No items with id: ${selectedItemObj.id} was found!`);
+     throw new Error(`No items with id: ${item.id} was found!`);
     }
 
     const question = {
@@ -73,35 +65,12 @@ export const addQuestion = (text: string) => {
  );
 };
 
-export const loadItemQuestions = () => {
+export const loadItemQuestions = (currentItem: Item) => {
  return new Promise<void>(
   async (resolve: () => void, reject: (e: unknown) => void) => {
    try {
-    const selectedItemObj = get(selectedItem);
-
-    if (selectedItemObj === null) {
-     throw new Error(
-      'Unexpected null selectedItem, impossible to create a Question'
-     );
-    }
-
-    const itemDoc = await firebase.getDoc(
-     firebase.doc(db, 'items', selectedItemObj.id)
-    );
-    const itemData = itemDoc.data();
-
-    if (itemData === undefined) {
-     throw new Error(`No items with id: ${selectedItemObj.id} was found!`);
-    }
-
-    if (itemData.questions === undefined) {
-     itemData.questions = [];
-    }
-
-    const item = itemData as Item;
-
     const questions = await Promise.all(
-     item.questions.map((q) => {
+     currentItem.questions.map((q) => {
       return firebase.getDoc(firebase.doc(db, 'questions', q));
      })
     );
@@ -114,12 +83,9 @@ export const loadItemQuestions = () => {
      return { id: q.id, ...data } as Question;
     });
 
-    _questions.update((questions) => {
-     return Object.freeze([
-      ...questionsData.map((_, i, a) => a[a.length - 1 - i]),
-      ...questions,
-     ]);
-    });
+    _questions.set(
+     Object.freeze([...questionsData.map((_, i, a) => a[a.length - 1 - i])])
+    );
 
     resolve();
    } catch (e) {
@@ -133,20 +99,13 @@ export const loadItemQuestions = () => {
  );
 };
 
-export const deleteQuestion = (questionId: string) => {
- return new Promise<void>(
-  async (resolve: () => void, reject: (e: unknown) => void) => {
+export const deleteQuestion = (questionId: string, item: Item) => {
+ return new Promise<Item>(
+  async (resolve: (item: Item) => void, reject: (e: unknown) => void) => {
    try {
-    const selectedItemObj = get(selectedItem);
-    if (selectedItemObj === null) {
-     throw new Error(
-      'Unexpected null selectedItem, impossible to create a Question'
-     );
-    }
-
     await Promise.all([
      firebase.deleteDoc(firebase.doc(db, 'questions', questionId)),
-     firebase.updateDoc(firebase.doc(db, 'items', selectedItemObj.id), {
+     firebase.updateDoc(firebase.doc(db, 'items', item.id), {
       questions: firebase.arrayRemove(questionId),
      }),
     ]);
@@ -154,8 +113,12 @@ export const deleteQuestion = (questionId: string) => {
     _questions.update((questions) => {
      return questions.filter((q) => q.id !== questionId);
     });
+    const updatedItem = {
+     ...item,
+     questions: item.questions.filter((qId) => qId !== questionId),
+    };
 
-    resolve();
+    resolve(updatedItem);
    } catch (e) {
     reject(e);
     console.error(e);
@@ -192,10 +155,14 @@ export const updateQuestion = (
     );
 
     _questions.update((questions) => {
-     return questions.map((q) => ({
-      ...q,
-      ...updateObj,
-     }));
+     return questions.map((q) =>
+      q.id === questionId
+       ? {
+          ...q,
+          ...updateObj,
+         }
+       : q
+     );
     });
 
     resolve();

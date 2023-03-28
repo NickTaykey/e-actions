@@ -1,5 +1,10 @@
 <script lang="ts">
- import { addItem, selectedItem, updateItem } from '../helpers/items.store';
+ import {
+  setCurrentItem,
+  currentItem,
+  updateItem,
+  addItem,
+ } from '../helpers/items.store';
  import { validateFormFields } from '../helpers/index';
  import { FormTypes } from '../helpers/types';
 
@@ -10,11 +15,11 @@
  let minPrice = 10;
  let name = '';
 
- if (type === FormTypes.EDIT && $selectedItem !== null) {
-  description = $selectedItem.description;
-  categories = $selectedItem.categories;
-  minPrice = $selectedItem.minPrice;
-  name = $selectedItem.name;
+ if (type === FormTypes.EDIT && $currentItem !== null) {
+  description = $currentItem.description;
+  categories = $currentItem.categories;
+  minPrice = $currentItem.minPrice;
+  name = $currentItem.name;
  }
 
  let showErrorAlert = false;
@@ -39,13 +44,17 @@
     minPrice = 10;
     name = '';
     window.alert('Item successfully posted!');
-   } else if ($selectedItem) {
-    await updateItem({
-     description,
-     categories,
-     minPrice,
-     name,
-    });
+   } else if (currentItem) {
+    const updatedItem = await updateItem(
+     {
+      description,
+      categories,
+      minPrice,
+      name,
+     },
+     $currentItem!
+    );
+    setCurrentItem(updatedItem);
    }
   } catch (e) {
    showErrorAlert = true;

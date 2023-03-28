@@ -9,9 +9,14 @@ import type { DocumentData } from 'firebase/firestore';
 
 const firebaseCollection = firebase.collection(db, 'items');
 
-export const itemsPerPage = 9;
+export const itemsPerPage = 3;
 
-export const selectedItem = writable<Item | null>(null);
+const _currentItem = writable<Item | null>(Object.freeze(null));
+export const currentItem = derived(
+ _currentItem,
+ ($_currentItem) => $_currentItem
+);
+export const setCurrentItem = (item: Item | null) => _currentItem.set(item);
 
 export const _hottestItemsIds = writable<string[]>([]);
 export const hottestItemsIds = derived(
@@ -127,6 +132,7 @@ export const addItem = async (newItem: ItemFields) => {
     createdAt: firebase.serverTimestamp(),
     userId: currentUser.uid,
     views: 0,
+    questions: [],
    };
 
    try {
@@ -137,16 +143,17 @@ export const addItem = async (newItem: ItemFields) => {
      newMap.set(docRef.id, {
       ...inputData,
       id: docRef.id,
-      questions: [],
      });
      return Object.freeze(newMap);
     });
 
-    _hottestItemsIds.update((hottestItemsIds) => [
-     ...hottestItemsIds,
-     docRef.id,
-    ]);
-    _latestItemsIds.update((latestItemsIds) => [docRef.id, ...latestItemsIds]);
+    _hottestItemsIds.update((hottestItemsIds) => {
+     return [...hottestItemsIds, docRef.id].slice(0, itemsPerPage);
+    });
+    _latestItemsIds.update((latestItemsIds) => {
+     return [docRef.id, ...latestItemsIds].slice(0, itemsPerPage);
+    });
+    _nItemsPublished.update((nItemsPublished) => 1 + nItemsPublished);
 
     resolve();
    } catch (e) {
@@ -183,44 +190,28 @@ export const loadItems = () => {
  );
 };
 
-export const updateItem = (newItem: ItemFields) => {
- return new Promise<void>(
-  async (resolve: () => void, reject: (e: unknown) => void) => {
+export const updateItem = (newItem: ItemFields, currentItem: Item) => {
+ return new Promise<Item>(
+  async (resolve: (item: Item) => void, reject: (e: unknown) => void) => {
    try {
-    const itemToUpdate = get(selectedItem);
-    if (itemToUpdate === null) throw new Error('Item to update not found');
-
-    const docRef = firebase.doc(db, 'items', itemToUpdate.id);
+    const docRef = firebase.doc(db, 'items', currentItem.id);
     await firebase.updateDoc(docRef, { ...newItem });
-
-    selectedItem.set(
-     Object.freeze({
-      ...itemToUpdate,
-      ...newItem,
-     } as Item)
-    );
+    const item = {
+     ...currentItem,
+     ...newItem,
+    } as Item;
 
     _items.update((items) => {
      if (items.size === 0) return items;
 
      const newMap = new Map(items);
-     const item = {
-      createdAt: itemToUpdate.createdAt,
-      description: newItem.description,
-      categories: newItem.categories,
-      userId: itemToUpdate.userId,
-      minPrice: newItem.minPrice,
-      id: itemToUpdate.id,
-      name: newItem.name,
-     } as Item;
 
-     newMap.set(itemToUpdate.id, item);
-     selectedItem.set(Object.freeze(item));
+     newMap.set(currentItem.id, item);
 
      return Object.freeze(newMap);
     });
 
-    resolve();
+    resolve(item);
    } catch (e) {
     reject(e);
     console.error(e);
@@ -232,20 +223,34 @@ export const updateItem = (newItem: ItemFields) => {
  );
 };
 
-export const deleteItem = (itemId: string) => {
+export const deleteItem = (item: Item) => {
  return new Promise<void>(
   async (resolve: () => void, reject: (e: unknown) => void) => {
    try {
-    await firebase.deleteDoc(firebase.doc(db, 'items', itemId));
+    await firebase.deleteDoc(firebase.doc(db, 'items', item.id));
 
     _items.update((items) => {
      if (items.size === 0) return items;
      const newMap = new Map(items);
-     newMap.delete(itemId);
+     newMap.delete(item.id);
      return Object.freeze(newMap);
     });
 
-    selectedItem.set(null);
+    _hottestItemsIds.update((hottestItemsIds) => {
+     return hottestItemsIds.filter((id) => id !== item.id);
+    });
+    _latestItemsIds.update((hottestItemsIds) => {
+     return hottestItemsIds.filter((id) => id !== item.id);
+    });
+
+    Promise.all(
+     item.questions.map((qId) => {
+      return firebase.deleteDoc(firebase.doc(db, 'questions', qId));
+     })
+    );
+
+    _nItemsPublished.update((nItemsPublished) => nItemsPublished - 1);
+
     resolve();
    } catch (e) {
     reject(e);
@@ -281,29 +286,38 @@ export const loadPage = (behaviour: ChangePageBehaviour) => {
  );
 };
 
-export const loadCurrentItem = () => {
- return new Promise<void>(
-  async (resolve: () => void, reject: (e: unknown) => void) => {
+export const loadCurrentItem = (itemId: string) => {
+ return new Promise<Item>(
+  async (resolve: (item: Item) => void, reject: (e: unknown) => void) => {
    try {
-    const itemId = window.location.pathname.split('/').at(-1)!;
     const docRef = firebase.doc(db, 'items', itemId);
-    const promises: Promise<any>[] = [
-     firebase.updateDoc(docRef, { views: firebase.increment(1) }),
-    ];
 
-    if (get(selectedItem) === null) promises.push(firebase.getDoc(docRef));
+    await firebase.updateDoc(docRef, { views: firebase.increment(1) });
 
-    const resolvedPromises = await Promise.all(promises);
+    const itemSnapshot = await firebase.getDoc(docRef);
+    const itemData = itemSnapshot.data();
 
-    if (get(selectedItem) === null) {
-     const itemData = resolvedPromises[1].data() as Item | undefined;
-     if (itemData === undefined) {
-      throw new Error(`No items with id: ${itemId} was found!`);
-     }
-     selectedItem.set(itemData);
+    if (itemData === undefined) {
+     throw new Error(`No items with id: ${itemId} was found!`);
     }
 
-    resolve();
+    if (get(items).size > 0) {
+     _items.update((items) => {
+      const newMap = new Map(items);
+      const item = newMap.get(itemId);
+
+      if (item === undefined) {
+       throw new Error(`No items with id: ${itemId} was stored locally!`);
+      }
+
+      item.views++;
+      newMap.set(itemId, item);
+
+      return newMap;
+     });
+    }
+
+    resolve({ ...itemData, id: docRef.id } as Item);
    } catch (e) {
     reject(e);
     console.error(e);

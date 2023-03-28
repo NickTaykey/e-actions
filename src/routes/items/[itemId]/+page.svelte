@@ -1,16 +1,17 @@
 <script lang="ts">
+ import {
+  loadCurrentItem,
+  setCurrentItem,
+  currentItem,
+  items,
+ } from '../../../helpers/items.store';
+ import { loadItemQuestions } from '../../../helpers/questions.store';
  import { signOutUser, signInUser } from '../../../helpers/index';
- import { selectedItem } from '../../../helpers/items.store';
  import { getAuth, onAuthStateChanged } from 'firebase/auth';
  import ItemView from '../../../components/ItemView.svelte';
- import { doc, getDoc } from 'firebase/firestore';
- import { db } from '../../../helpers/firebase';
  import { onMount } from 'svelte';
 
- import type { Item } from '../../../helpers/types';
- import type { PageData } from './$types';
-
- export let data: PageData;
+ let errorAlertMessage = '';
 
  onAuthStateChanged(getAuth(), (user) => {
   if (user !== null) signInUser(user);
@@ -18,12 +19,26 @@
  });
 
  onMount(async () => {
-  if ($selectedItem === null) {
-   const docRef = doc(db, 'items', data.props.itemId!);
-   const item = await getDoc(docRef);
-   $selectedItem = { ...item.data(), id: docRef.id } as Item;
+  try {
+   const itemId = window.location.pathname.split('/').at(-1)!;
+
+   if ($currentItem === null || $items.size === 0) {
+    setCurrentItem(await loadCurrentItem(itemId));
+   }
+
+   loadItemQuestions($currentItem!);
+  } catch (e) {
+   console.error(e);
+   errorAlertMessage =
+    'Unexpected server side error, we are unable to display the item.';
   }
  });
 </script>
 
-<ItemView />
+{#if errorAlertMessage.length}
+ <div>{errorAlertMessage}</div>
+{/if}
+
+{#if $currentItem && !errorAlertMessage.length}
+ <ItemView />
+{/if}

@@ -1,11 +1,11 @@
 <script lang="ts">
+ import { currentItem, setCurrentItem } from '../helpers/items.store';
  import { deleteQuestion } from '../helpers/questions.store';
- import { selectedItem } from '../helpers/items.store';
  import QuestionForm from './QuestionForm.svelte';
  import { FormTypes } from '../helpers/types';
+ import { currentUser } from '../helpers';
 
  import type { Question } from '../helpers/types';
- import { currentUser } from '../helpers';
 
  export let question: Question;
 
@@ -17,12 +17,13 @@
   showEditQuestionForm = !showEditQuestionForm;
  };
 
- const handleDeleteQuestion = () => {
-  if ($selectedItem === null || question === null) return;
-  deleteQuestion(question.id);
+ const handleDeleteQuestion = async () => {
+  if ($currentItem === null || question === null) return;
+  const updatedItem = await deleteQuestion(question.id, $currentItem!);
+  setCurrentItem(updatedItem);
  };
 
- const isItemCreatorUser = $selectedItem?.userId === $currentUser?.uid;
+ const isItemCreatorUser = $currentItem?.userId === $currentUser?.uid;
  const doesUserOwnsQuestion = $currentUser?.uid === question?.userId;
 </script>
 

@@ -16,11 +16,11 @@ export interface ItemFirebaseInput extends ItemFields {
  views: number;
  createdAt: FieldValue;
  userId: string;
+ questions: string[];
 }
 
 export interface Item extends ItemFirebaseInput {
  id: string;
- questions: string[];
 }
 
 export enum ChangePageBehaviour {
