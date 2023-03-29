@@ -10,9 +10,11 @@ import type { ItemFirebaseInput, Item } from './types';
 const seedDB = async () => {
  const auctionItems: ItemFirebaseInput[] = [];
 
- for (let i = 0; i < 5; i++) {
+ for (let i = 0; i < 10; i++) {
+  const name = faker.commerce.productName();
   auctionItems.push({
-   name: faker.commerce.productName(),
+   name,
+   nameLowerCase: name.toLowerCase(),
    description: faker.lorem.sentences(),
    views: Math.trunc(Math.random() * 100),
    minPrice: faker.datatype.number({ min: 1, max: 100 }),

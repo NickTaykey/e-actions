@@ -22,6 +22,7 @@
   );
   setItems(null, snapshot);
  };
+
  const hanldePrevPageClick = () => {
   currentPageNumber = currentPageNumber - 1;
  };

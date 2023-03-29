@@ -1,3 +1,4 @@
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { derived, get, writable } from 'svelte/store';
 import * as firebase from 'firebase/firestore';
 import { ChangePageBehaviour } from './types';
@@ -43,12 +44,14 @@ export const currentPageNumber = derived(
  ($_currentPageNumber) => $_currentPageNumber
 );
 
-const _nItemsPublished = writable<number>(0);
+const _nItemsPublished = writable(0);
 
 export const nItemsPublished = derived(
  _nItemsPublished,
  ($_nItemsPublished) => $_nItemsPublished
 );
+
+export const showSearchResults = writable(false);
 
 export const setItems = (
  hottestItemsShapshot: firebase.QuerySnapshot<DocumentData> | null,
@@ -70,6 +73,7 @@ export const setItems = (
  for (const doc of itemsWithoutDuplicates) {
   const itemData = doc.data();
   itemsMap.set(doc.id, {
+   nameLowerCase: itemData.name.toLowerCase(),
    description: itemData.description as string,
    categories: itemData.categories as string[],
    minPrice: itemData.minPrice as number,
@@ -129,6 +133,7 @@ export const addItem = async (newItem: ItemFields) => {
 
    const inputData: ItemFirebaseInput = {
     ...newItem,
+    nameLowerCase: newItem.name.toLowerCase(),
     createdAt: firebase.serverTimestamp(),
     userId: currentUser.uid,
     views: 0,
@@ -324,6 +329,53 @@ export const loadCurrentItem = (itemId: string) => {
     throw new Error(
      'Unexpected error while loading documents from Firebase Cloud Store'
     );
+   }
+  }
+ );
+};
+
+export const searchItem = (name: string | null, category: string | null) => {
+ return new Promise<Item[]>(
+  async (resolve: (items: Item[]) => void, reject: (e: unknown) => void) => {
+   try {
+    const queries: firebase.Query<firebase.DocumentData>[] = [];
+    const itemsCollection = collection(db, 'items');
+
+    if (name !== null) {
+     queries.push(
+      query(
+       itemsCollection,
+       where('nameLowerCase', '>=', name.toLowerCase()),
+       where('nameLowerCase', '<=', name.toLowerCase() + '\uf8ff')
+      )
+     );
+    }
+
+    if (category !== null) {
+     queries.push(
+      query(itemsCollection, where('categories', 'array-contains', category))
+     );
+    }
+
+    const snapshots = await Promise.all(
+     queries.filter((q) => q !== undefined).map((q) => getDocs(q))
+    );
+
+    const resultsMap = new Map<string, Item>();
+
+    for (const s of snapshots.map((s) => s.docs).flat()) {
+     if (!resultsMap.has(s.id)) {
+      const data = s.data();
+      if (data === undefined) {
+       throw new Error('Unexpected Error while loading questions of the Item');
+      }
+      resultsMap.set(s.id, { ...s.data(), id: s.id } as Item);
+     }
+    }
+
+    resolve(Array.from(resultsMap.values()));
+   } catch (e: unknown) {
+    reject(e);
    }
   }
  );

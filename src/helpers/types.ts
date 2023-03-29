@@ -1,8 +1,8 @@
 import type { FieldValue } from 'firebase/firestore';
 
 export enum FormTypes {
- NEW,
  EDIT,
+ NEW,
 }
 
 export interface ItemFields {
@@ -15,6 +15,7 @@ export interface ItemFields {
 export interface ItemFirebaseInput extends ItemFields {
  views: number;
  createdAt: FieldValue;
+ nameLowerCase: string;
  userId: string;
  questions: string[];
 }

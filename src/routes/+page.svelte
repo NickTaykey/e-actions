@@ -1,9 +1,10 @@
 <script lang="ts">
+ import { loadItems, items, showSearchResults } from '../helpers/items.store';
  import { currentUser, signInUser, signOutUser } from '../helpers/index';
  import HottestItemsView from '../components/HottestItemsView.svelte';
  import LatestItemsView from '../components/LatestItemsView.svelte';
  import { getAuth, onAuthStateChanged } from 'firebase/auth';
- import { loadItems, items } from '../helpers/items.store';
+ import SearchView from '../components/SearchView.svelte';
  import AuthPanel from '../components/AuthPanel.svelte';
  import ItemForm from '../components/ItemForm.svelte';
  import { FormTypes } from '../helpers/types';
@@ -28,6 +29,10 @@
 
 <h1>E-Actions</h1>
 
+<SearchView />
+
+<hr />
+
 {#if $currentUser !== null}
  <p>Welcome, {$currentUser.email}!</p>
  <button on:click={() => auth.signOut()}>Sign Out</button>
@@ -36,5 +41,7 @@
  <AuthPanel />
 {/if}
 
-<HottestItemsView />
-<LatestItemsView />
+{#if !$showSearchResults}
+ <HottestItemsView />
+ <LatestItemsView />
+{/if}
