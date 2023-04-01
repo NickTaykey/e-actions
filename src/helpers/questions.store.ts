@@ -25,7 +25,7 @@ export const addQuestion = (text: string, item: Item) => {
 
     const itemData = (await firebase.getDoc(itemRef)).data();
 
-    if (itemData === undefined) {
+    if (!itemData) {
      throw new Error(`No items with id: ${item.id} was found!`);
     }
 
@@ -77,7 +77,7 @@ export const loadItemQuestions = (currentItem: Item) => {
 
     const questionsData = questions.map((q) => {
      let data = q.data();
-     if (data === undefined) {
+     if (!data) {
       throw new Error('Unexpected Error while loading questions of the Item');
      }
      return { id: q.id, ...data } as Question;

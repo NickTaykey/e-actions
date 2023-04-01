@@ -82,7 +82,7 @@
    <input type="text" bind:value={name} />
   </label>
   {#if invalidFieldsIndexes.includes(0)}
-   <div class="validation-error">Please, provide a valid name for the item</div>
+   <div class="error">Please, provide a valid name for the item</div>
   {/if}
  </div>
  <div>
@@ -91,9 +91,7 @@
    <textarea bind:value={description} cols="30" rows="10" />
   </label>
   {#if invalidFieldsIndexes.includes(1)}
-   <div class="validation-error">
-    Please, provide a valid description for the item
-   </div>
+   <div class="error">Please, provide a valid description for the item</div>
   {/if}
  </div>
  <div>
@@ -102,9 +100,7 @@
    <input type="number" bind:value={minPrice} min={1} />
   </label>
   {#if invalidFieldsIndexes.includes(2)}
-   <div class="validation-error">
-    Please, provide a valid minimum price for the item
-   </div>
+   <div class="error">Please, provide a valid minimum price for the item</div>
   {/if}
  </div>
  <div>
@@ -119,9 +115,7 @@
     </button>
    {/if}
    {#if invalidCategoriesIndexes.includes(index)}
-    <div class="validation-error">
-     Please, provide this category or remove it
-    </div>
+    <div class="error">Please, provide this category or remove it</div>
    {/if}
   {/each}
   <button type="button" on:click={handleAddCategory}>Add Category</button>
@@ -130,9 +124,3 @@
   {type === FormTypes.NEW ? 'Publish' : 'Update'}
  </button>
 </form>
-
-<style>
- .validation-error {
-  color: red;
- }
-</style>

@@ -12,6 +12,12 @@ export interface ItemFields {
  categories: string[];
 }
 
+export type Offer = {
+ id: string;
+ email: string;
+ amount: number;
+};
+
 export interface ItemFirebaseInput extends ItemFields {
  views: number;
  createdAt: FieldValue;
@@ -22,6 +28,7 @@ export interface ItemFirebaseInput extends ItemFields {
 
 export interface Item extends ItemFirebaseInput {
  id: string;
+ offers: string[];
 }
 
 export enum ChangePageBehaviour {

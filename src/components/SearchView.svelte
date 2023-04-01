@@ -30,7 +30,7 @@
  <div>
   <label>
    Category
-   <input type="text" placeholder="Search By Tag" bind:value={category} />
+   <input type="text" placeholder="Search By Category" bind:value={category} />
   </label>
  </div>
  <button type="submit">Search</button>

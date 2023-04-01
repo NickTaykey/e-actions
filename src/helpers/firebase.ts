@@ -6,8 +6,8 @@ import {
  PUBLIC_FIREBASE_API_KEY,
  PUBLIC_FIREBASE_APP_ID,
 } from '$env/static/public';
-import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
+import { initializeApp } from 'firebase/app';
 
 const firebaseConfig = {
  messagingSenderId: PUBLIC_FIREBASE_MESSAGING_SENDER_ID,

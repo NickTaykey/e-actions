@@ -4,6 +4,7 @@
  import QuestionForm from './QuestionForm.svelte';
  import QuestionView from './QuestionView.svelte';
  import { FormTypes } from '../helpers/types';
+ import OffersView from './OffersView.svelte';
  import ItemForm from './ItemForm.svelte';
  import { currentUser } from '../helpers';
  import { goto } from '$app/navigation';
@@ -32,6 +33,7 @@
  <h2>Min. Offer: ${$currentItem.minPrice}</h2>
  <p>{$currentItem.description}</p>
  <div>{$currentItem.categories.join(', ')}</div>
+
  {#if $currentUser && $currentItem.userId === $currentUser.uid}
   <button on:click={toggleEditItemForm}>
    {showEditItemForm ? 'Close' : 'Edit'}
@@ -41,10 +43,14 @@
    <ItemForm type={FormTypes.EDIT} />
   {/if}
  {/if}
+
  {#if $currentUser !== null}
   <QuestionForm type={FormTypes.NEW} />
  {/if}
+
  {#each $questions as question}
   <QuestionView {question} />
  {/each}
 {/if}
+
+<OffersView />

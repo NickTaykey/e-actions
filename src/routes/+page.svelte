@@ -23,6 +23,7 @@
  });
 
  onMount(() => {
+  $showSearchResults = false;
   if ($items.size === 0) loadItems();
  });
 </script>

@@ -89,7 +89,7 @@
 
 <main>
  {#if errorMessage.length}
-  <div>{errorMessage}</div>
+  <div class="error">{errorMessage}</div>
  {/if}
  <div>
   <button on:click={handleGithubSignIn}>Github</button>

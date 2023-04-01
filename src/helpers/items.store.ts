@@ -1,14 +1,18 @@
-import { collection, getDocs, query, where } from 'firebase/firestore';
 import { derived, get, writable } from 'svelte/store';
-import * as firebase from 'firebase/firestore';
+import * as firestore from 'firebase/firestore';
 import { ChangePageBehaviour } from './types';
 import { getAuth } from 'firebase/auth';
 import { db } from './firebase';
 
-import type { ItemFirebaseInput, ItemFields, Item } from '../helpers/types';
+import type {
+ ItemFirebaseInput,
+ ItemFields,
+ Offer,
+ Item,
+} from '../helpers/types';
 import type { DocumentData } from 'firebase/firestore';
 
-const firebaseCollection = firebase.collection(db, 'items');
+const firebaseCollection = firestore.collection(db, 'items');
 
 export const itemsPerPage = 3;
 
@@ -16,6 +20,12 @@ const _currentItem = writable<Item | null>(Object.freeze(null));
 export const currentItem = derived(
  _currentItem,
  ($_currentItem) => $_currentItem
+);
+
+const _currentItemOffers = writable<readonly Offer[]>(Object.freeze([]));
+export const currentItemOffers = derived(
+ _currentItemOffers,
+ ($_currentItemOffers) => $_currentItemOffers
 );
 export const setCurrentItem = (item: Item | null) => _currentItem.set(item);
 
@@ -54,8 +64,8 @@ export const nItemsPublished = derived(
 export const showSearchResults = writable(false);
 
 export const setItems = (
- hottestItemsShapshot: firebase.QuerySnapshot<DocumentData> | null,
- latestItemsSnapshot: firebase.QuerySnapshot<DocumentData> | null
+ hottestItemsShapshot: firestore.QuerySnapshot<DocumentData> | null,
+ latestItemsSnapshot: firestore.QuerySnapshot<DocumentData> | null
 ) => {
  const hottestItemsDocs = hottestItemsShapshot
   ? Array.from(hottestItemsShapshot.docs)
@@ -73,6 +83,7 @@ export const setItems = (
  for (const doc of itemsWithoutDuplicates) {
   const itemData = doc.data();
   itemsMap.set(doc.id, {
+   offers: itemData.offers,
    nameLowerCase: itemData.name.toLowerCase(),
    description: itemData.description as string,
    categories: itemData.categories as string[],
@@ -101,22 +112,22 @@ export const handleItemsLoading = async (
  behaviour: ChangePageBehaviour,
  sortField: 'views' | 'createdAt'
 ) => {
- const queryComponents: firebase.QueryConstraint[] = [
-  firebase.orderBy(sortField, 'desc'),
-  firebase.limit(itemsPerPage),
+ const queryComponents: firestore.QueryConstraint[] = [
+  firestore.orderBy(sortField, 'desc'),
+  firestore.limit(itemsPerPage),
  ];
 
  if (behaviour === ChangePageBehaviour.NEXT) {
   const lastItemId = get(
    sortField === 'createdAt' ? latestItemsIds : hottestItemsIds
   ).at(-1)!;
-  const lastPageItemRef = firebase.doc(db, 'items', lastItemId);
-  const lastItemSnapshot = await firebase.getDoc(lastPageItemRef);
-  queryComponents.push(firebase.startAfter(lastItemSnapshot));
+  const lastPageItemRef = firestore.doc(db, 'items', lastItemId);
+  const lastItemSnapshot = await firestore.getDoc(lastPageItemRef);
+  queryComponents.push(firestore.startAfter(lastItemSnapshot));
  }
 
- const querySnapshot = await firebase.getDocs(
-  firebase.query(firebaseCollection, ...queryComponents)
+ const querySnapshot = await firestore.getDocs(
+  firestore.query(firebaseCollection, ...queryComponents)
  );
 
  return querySnapshot;
@@ -134,20 +145,21 @@ export const addItem = async (newItem: ItemFields) => {
    const inputData: ItemFirebaseInput = {
     ...newItem,
     nameLowerCase: newItem.name.toLowerCase(),
-    createdAt: firebase.serverTimestamp(),
+    createdAt: firestore.serverTimestamp(),
     userId: currentUser.uid,
     views: 0,
     questions: [],
    };
 
    try {
-    const docRef = await firebase.addDoc(firebaseCollection, inputData);
+    const docRef = await firestore.addDoc(firebaseCollection, inputData);
 
     _items.update((items) => {
      const newMap = new Map(items);
      newMap.set(docRef.id, {
       ...inputData,
       id: docRef.id,
+      offers: [],
      });
      return Object.freeze(newMap);
     });
@@ -177,7 +189,7 @@ export const loadItems = () => {
   async (resolve: () => void, reject: (e: unknown) => void) => {
    try {
     const [countSnapshot] = await Promise.all([
-     firebase.getCountFromServer(firebaseCollection),
+     firestore.getCountFromServer(firebaseCollection),
      loadPage(ChangePageBehaviour.INITIAL),
     ]);
 
@@ -199,8 +211,8 @@ export const updateItem = (newItem: ItemFields, currentItem: Item) => {
  return new Promise<Item>(
   async (resolve: (item: Item) => void, reject: (e: unknown) => void) => {
    try {
-    const docRef = firebase.doc(db, 'items', currentItem.id);
-    await firebase.updateDoc(docRef, { ...newItem });
+    const docRef = firestore.doc(db, 'items', currentItem.id);
+    await firestore.updateDoc(docRef, { ...newItem });
     const item = {
      ...currentItem,
      ...newItem,
@@ -228,11 +240,30 @@ export const updateItem = (newItem: ItemFields, currentItem: Item) => {
  );
 };
 
+export const setItemOffers = async (item: Item) => {
+ const offers = (
+  await Promise.all(
+   item.offers.map((offerId) => {
+    return firestore.getDoc(firestore.doc(db, 'user-offers', offerId));
+   })
+  )
+ )
+  .map(
+   (offerSnapshot, i) =>
+    ({ id: item.offers[i], ...offerSnapshot.data()! } as Offer)
+  )
+  .sort((a, b) => (a.amount > b.amount ? -1 : 1));
+
+ _currentItemOffers.set(Object.freeze(offers));
+
+ return offers;
+};
+
 export const deleteItem = (item: Item) => {
  return new Promise<void>(
   async (resolve: () => void, reject: (e: unknown) => void) => {
    try {
-    await firebase.deleteDoc(firebase.doc(db, 'items', item.id));
+    await firestore.deleteDoc(firestore.doc(db, 'items', item.id));
 
     _items.update((items) => {
      if (items.size === 0) return items;
@@ -250,7 +281,7 @@ export const deleteItem = (item: Item) => {
 
     Promise.all(
      item.questions.map((qId) => {
-      return firebase.deleteDoc(firebase.doc(db, 'questions', qId));
+      return firestore.deleteDoc(firestore.doc(db, 'questions', qId));
      })
     );
 
@@ -295,23 +326,27 @@ export const loadCurrentItem = (itemId: string) => {
  return new Promise<Item>(
   async (resolve: (item: Item) => void, reject: (e: unknown) => void) => {
    try {
-    const docRef = firebase.doc(db, 'items', itemId);
+    const docRef = firestore.doc(db, 'items', itemId);
 
-    await firebase.updateDoc(docRef, { views: firebase.increment(1) });
+    await firestore.updateDoc(docRef, { views: firestore.increment(1) });
 
-    const itemSnapshot = await firebase.getDoc(docRef);
+    const itemSnapshot = await firestore.getDoc(docRef);
     const itemData = itemSnapshot.data();
 
-    if (itemData === undefined) {
+    if (!itemData) {
      throw new Error(`No items with id: ${itemId} was found!`);
     }
+    if (!itemData.offers) itemData.offers = [];
+
+    const item = itemData as Item;
+    await setItemOffers(item);
 
     if (get(items).size > 0) {
      _items.update((items) => {
       const newMap = new Map(items);
       const item = newMap.get(itemId);
 
-      if (item === undefined) {
+      if (!item) {
        throw new Error(`No items with id: ${itemId} was stored locally!`);
       }
 
@@ -322,7 +357,7 @@ export const loadCurrentItem = (itemId: string) => {
      });
     }
 
-    resolve({ ...itemData, id: docRef.id } as Item);
+    resolve({ ...item, id: docRef.id } as Item);
    } catch (e) {
     reject(e);
     console.error(e);
@@ -338,27 +373,30 @@ export const searchItem = (name: string | null, category: string | null) => {
  return new Promise<Item[]>(
   async (resolve: (items: Item[]) => void, reject: (e: unknown) => void) => {
    try {
-    const queries: firebase.Query<firebase.DocumentData>[] = [];
-    const itemsCollection = collection(db, 'items');
+    const queries: firestore.Query<firestore.DocumentData>[] = [];
+    const itemsCollection = firestore.collection(db, 'items');
 
     if (name !== null) {
      queries.push(
-      query(
+      firestore.query(
        itemsCollection,
-       where('nameLowerCase', '>=', name.toLowerCase()),
-       where('nameLowerCase', '<=', name.toLowerCase() + '\uf8ff')
+       firestore.where('nameLowerCase', '>=', name.toLowerCase()),
+       firestore.where('nameLowerCase', '<=', name.toLowerCase() + '\uf8ff')
       )
      );
     }
 
     if (category !== null) {
      queries.push(
-      query(itemsCollection, where('categories', 'array-contains', category))
+      firestore.query(
+       itemsCollection,
+       firestore.where('categories', 'array-contains', category)
+      )
      );
     }
 
     const snapshots = await Promise.all(
-     queries.filter((q) => q !== undefined).map((q) => getDocs(q))
+     queries.filter((q) => q !== undefined).map((q) => firestore.getDocs(q))
     );
 
     const resultsMap = new Map<string, Item>();
@@ -366,7 +404,7 @@ export const searchItem = (name: string | null, category: string | null) => {
     for (const s of snapshots.map((s) => s.docs).flat()) {
      if (!resultsMap.has(s.id)) {
       const data = s.data();
-      if (data === undefined) {
+      if (!data) {
        throw new Error('Unexpected Error while loading questions of the Item');
       }
       resultsMap.set(s.id, { ...s.data(), id: s.id } as Item);
@@ -375,6 +413,45 @@ export const searchItem = (name: string | null, category: string | null) => {
 
     resolve(Array.from(resultsMap.values()));
    } catch (e: unknown) {
+    console.error(e);
+    reject(e);
+   }
+  }
+ );
+};
+
+export const setOffer = (item: Item, amount: number) => {
+ return new Promise<void>(
+  async (resolve: () => void, reject: (e: unknown) => void) => {
+   try {
+    const { currentUser } = getAuth();
+    if (currentUser === null) {
+     throw new Error('Set offer operation requires user authenticated');
+    }
+
+    const newOffer = {
+     email: currentUser.email as string,
+     amount,
+    };
+
+    const newOfferId = crypto.randomUUID();
+
+    await Promise.all([
+     firestore.updateDoc(firestore.doc(db, 'items', item.id), {
+      offers: firestore.arrayUnion(newOfferId),
+     }),
+     firestore.setDoc(firestore.doc(db, 'user-offers', newOfferId), newOffer),
+    ]);
+
+    _currentItemOffers.update((currentItemOffers) => {
+     let newOffers = [{ id: newOfferId, ...newOffer }, ...currentItemOffers];
+     newOffers.sort((a, b) => (a.amount > b.amount ? -1 : 1));
+     return Object.freeze(newOffers);
+    });
+
+    resolve();
+   } catch (e: unknown) {
+    console.error(e);
     reject(e);
    }
   }

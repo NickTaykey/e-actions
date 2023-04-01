@@ -36,7 +36,7 @@
 </script>
 
 {#if errorAlertMessage.length}
- <div>{errorAlertMessage}</div>
+ <div class="error">{errorAlertMessage}</div>
 {/if}
 
 {#if $currentItem && !errorAlertMessage.length}

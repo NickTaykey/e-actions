@@ -49,7 +49,7 @@
 </script>
 
 {#if showErrorAlert}
- <div>Unexpected Error while creating the Question</div>
+ <div class="error">Unexpected Error while creating the Question</div>
 {/if}
 <form action="#" on:submit|preventDefault={handleFormSubmit}>
  {#if doesUserOwnsQuestion || type === FormTypes.NEW}
@@ -57,9 +57,7 @@
    Text:
    <textarea bind:value={text} cols="30" rows="10" />
    {#if showValidationErrorAlert}
-    <div class="validation-error">
-     Please, provide a valid text for the question
-    </div>
+    <div class="error">Please, provide a valid text for the question</div>
    {/if}
   </label>
  {/if}
@@ -78,9 +76,3 @@
   {/if}
  </button>
 </form>
-
-<style>
- .validation-error {
-  color: red;
- }
-</style>
