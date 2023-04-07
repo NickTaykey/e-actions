@@ -240,19 +240,22 @@ export const updateItem = (newItem: ItemFields, currentItem: Item) => {
  );
 };
 
-export const setItemOffers = async (item: Item) => {
- const offers = (
-  await Promise.all(
-   item.offers.map((offerId) => {
-    return firestore.getDoc(firestore.doc(db, 'user-offers', offerId));
-   })
+export const loadItemOffers = async (item: Item) => {
+ let offers: Offer[] = [];
+ if (item.offers && item.offers.length > 0) {
+  offers = (
+   await Promise.all(
+    item.offers.map((offerId) => {
+     return firestore.getDoc(firestore.doc(db, 'user-offers', offerId));
+    })
+   )
   )
- )
-  .map(
-   (offerSnapshot, i) =>
-    ({ id: item.offers[i], ...offerSnapshot.data()! } as Offer)
-  )
-  .sort((a, b) => (a.amount > b.amount ? -1 : 1));
+   .map(
+    (offerSnapshot, i) =>
+     ({ id: item.offers[i], ...offerSnapshot.data()! } as Offer)
+   )
+   .sort((a, b) => (a.amount > b.amount ? -1 : 1));
+ }
 
  _currentItemOffers.set(Object.freeze(offers));
 
@@ -339,7 +342,7 @@ export const loadCurrentItem = (itemId: string) => {
     if (!itemData.offers) itemData.offers = [];
 
     const item = itemData as Item;
-    await setItemOffers(item);
+    await loadItemOffers(item);
 
     if (get(items).size > 0) {
      _items.update((items) => {

@@ -2,7 +2,7 @@
  import {
   currentItemOffers,
   setCurrentItem,
-  setItemOffers,
+  loadItemOffers,
   currentItem,
  } from '../helpers/items.store';
  import * as firestore from 'firebase/firestore';
@@ -13,15 +13,22 @@
  import { goto } from '$app/navigation';
  import { onMount } from 'svelte';
 
- import type { Item } from '../helpers/types';
+ import type { Item, Offer } from '../helpers/types';
 
  onMount(() => {
   const unsubscribe = firestore.onSnapshot(
    firestore.doc(db, 'items', $currentItem!.id),
    async (doc) => {
     if (!doc.exists()) return goto('/');
-    setCurrentItem({ id: doc.id, ...doc.data()! } as Item);
-    setItemOffers($currentItem!);
+    const item = doc.data() as Item;
+    if (doc.id !== $currentItem!.id || !item.offers) return;
+    const offerSnapshot = await firestore.getDoc(
+     firestore.doc(db, 'user-offers', item.offers.at(-1)!)
+    );
+    const offer = offerSnapshot.data() as Offer;
+    if ($currentUser && offer.email === $currentUser.email) return;
+    setCurrentItem({ ...$currentItem, offers: item.offers || [] } as Item);
+    loadItemOffers($currentItem!);
    }
   );
   return unsubscribe;

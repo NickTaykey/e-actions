@@ -1,5 +1,5 @@
 <script lang="ts">
- import { loadItems, items, showSearchResults } from '../helpers/items.store';
+ import { showSearchResults, loadItems, items } from '../helpers/items.store';
  import { currentUser, signInUser, signOutUser } from '../helpers/index';
  import HottestItemsView from '../components/HottestItemsView.svelte';
  import LatestItemsView from '../components/LatestItemsView.svelte';

@@ -2,6 +2,7 @@
  import {
   loadCurrentItem,
   setCurrentItem,
+  loadItemOffers,
   currentItem,
   items,
  } from '../../../helpers/items.store';
@@ -10,6 +11,8 @@
  import { getAuth, onAuthStateChanged } from 'firebase/auth';
  import ItemView from '../../../components/ItemView.svelte';
  import { onMount } from 'svelte';
+
+ import type { Item } from '../../../helpers/types';
 
  let errorAlertMessage = '';
 
@@ -23,9 +26,13 @@
    const itemId = window.location.pathname.split('/').at(-1)!;
 
    if ($currentItem === null || $items.size === 0) {
-    setCurrentItem(await loadCurrentItem(itemId));
+    const item = await loadCurrentItem(itemId);
+    setCurrentItem({ ...item, offers: item.offers || [] });
+   } else if ($items.has($currentItem.id)) {
+    setCurrentItem($items.get(itemId) as Item);
    }
 
+   loadItemOffers($currentItem!);
    loadItemQuestions($currentItem!);
   } catch (e) {
    console.error(e);
