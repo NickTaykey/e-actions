@@ -95,6 +95,7 @@ export const setItems = (
    description: itemData.description as string,
    categories: itemData.categories as string[],
    minPrice: itemData.minPrice as number,
+   acceptedOffer: itemData.acceptedOffer || null,
    userId: itemData.userId as string,
    name: itemData.name as string,
    createdAt: itemData.createdAt,
@@ -174,6 +175,7 @@ export const addItem = async (newItem: ItemFields, image: File | null) => {
       id: docRef.id,
       offers: [],
       image: imageStorageData,
+      acceptedOffer: null,
      });
      return Object.freeze(newMap);
     });
@@ -358,15 +360,16 @@ export const loadCurrentItem = (itemId: string) => {
    try {
     const docRef = firestore.doc(db, 'items', itemId);
 
-    await firestore.updateDoc(docRef, { views: firestore.increment(1) });
-
     const itemSnapshot = await firestore.getDoc(docRef);
     const itemData = itemSnapshot.data();
+
+    firestore.updateDoc(docRef, { views: firestore.increment(1) });
 
     if (!itemData) {
      throw new Error(`No items with id: ${itemId} was found!`);
     }
     if (!itemData.offers) itemData.offers = [];
+    if (!itemData.acceptedOffer) itemData.acceptedOffer = null;
 
     const item = itemData as Item;
     await loadItemOffers(item);
@@ -506,4 +509,11 @@ const saveImagesOnCloudStorage = (image: File) => {
    }
   }
  );
+};
+
+export const setAcceptedOffer = async (offer: Offer) => {
+ await firestore.updateDoc(firestore.doc(db, 'items', get(currentItem)!.id), {
+  acceptedOffer: offer,
+ });
+ setCurrentItem({ ...get(currentItem)!, acceptedOffer: offer });
 };

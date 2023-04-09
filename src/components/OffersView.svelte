@@ -27,7 +27,11 @@
     );
     const offer = offerSnapshot.data() as Offer;
     if ($currentUser && offer.email === $currentUser.email) return;
-    setCurrentItem({ ...$currentItem, offers: item.offers || [] } as Item);
+    setCurrentItem({
+     ...$currentItem,
+     offers: item.offers || [],
+     acceptedOffer: item.acceptedOffer || null,
+    } as Item);
     loadItemOffers($currentItem!);
    }
   );
@@ -35,9 +39,13 @@
  });
 </script>
 
-{#if $currentUser}
- <UserOffer />
-{/if}
-{#if $currentItemOffers.length}
- <OffersTable />
+{#if $currentItem && $currentItem.acceptedOffer}
+ <div>Auction Closed {$currentItem.acceptedOffer.email}</div>
+{:else}
+ {#if $currentUser}
+  <UserOffer />
+ {/if}
+ {#if $currentItemOffers.length}
+  <OffersTable />
+ {/if}
 {/if}

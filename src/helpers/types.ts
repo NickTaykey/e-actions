@@ -32,6 +32,7 @@ export interface ItemFirebaseInput extends ItemFields {
 export interface Item extends ItemFirebaseInput {
  id: string;
  offers: string[];
+ acceptedOffer: Offer | null;
 }
 
 export enum ChangePageBehaviour {
