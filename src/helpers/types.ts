@@ -5,6 +5,8 @@ export enum FormTypes {
  NEW,
 }
 
+export type ImageStorageData = { url: string; id: string } | null;
+
 export interface ItemFields {
  name: string;
  description: string;
@@ -24,6 +26,7 @@ export interface ItemFirebaseInput extends ItemFields {
  nameLowerCase: string;
  userId: string;
  questions: string[];
+ image: ImageStorageData;
 }
 
 export interface Item extends ItemFirebaseInput {

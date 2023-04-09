@@ -7,6 +7,9 @@
  } from '../helpers/items.store';
  import { validateFormFields } from '../helpers/index';
  import { FormTypes } from '../helpers/types';
+ import { db, storage } from '../helpers/firebase';
+ import { deleteObject, ref } from 'firebase/storage';
+ import { doc, updateDoc } from 'firebase/firestore';
 
  export let type: FormTypes;
 
@@ -14,6 +17,7 @@
  let description = '';
  let minPrice = 10;
  let name = '';
+ let files: FileList;
 
  if (type === FormTypes.EDIT && $currentItem !== null) {
   description = $currentItem.description;
@@ -27,7 +31,7 @@
  let invalidCategoriesIndexes: number[] = [];
  let invalidFieldsIndexes: number[] = [];
 
- const handleFormSubmit = async () => {
+ const handleFormSubmit = async (e: SubmitEvent) => {
   const fields = { categories, description, name, minPrice };
   const validationData = validateFormFields(fields);
 
@@ -38,7 +42,7 @@
 
   try {
    if (type === FormTypes.NEW) {
-    await addItem(fields);
+    await addItem(fields, files.item(0));
     categories = [''];
     description = '';
     minPrice = 10;
@@ -52,7 +56,8 @@
       minPrice,
       name,
      },
-     $currentItem!
+     $currentItem!,
+     files.item(0)
     );
     setCurrentItem(updatedItem);
    }
@@ -68,6 +73,18 @@
    if (categories.length === 1) return;
    categories = categories.filter((_, idx) => idx !== index);
   };
+ };
+
+ const handleDeleteImage = async () => {
+  if ($currentItem === null || $currentItem.image === null) return;
+  await Promise.all([
+   updateDoc(doc(db, 'items', $currentItem.id), { image: null }),
+   deleteObject(ref(storage, $currentItem.image.id)),
+   setCurrentItem({
+    ...$currentItem,
+    image: null,
+   }),
+  ]);
  };
 </script>
 
@@ -104,22 +121,29 @@
   {/if}
  </div>
  <div>
-  {#each categories as category, index}
-   <label>
-    Category {index + 1}:
-    <input type="text" bind:value={category} />
-   </label>
-   {#if index > 0}
-    <button type="button" on:click={handleRemoveCategoryFactory(index)}>
-     Remove
-    </button>
-   {/if}
-   {#if invalidCategoriesIndexes.includes(index)}
-    <div class="error">Please, provide this category or remove it</div>
-   {/if}
-  {/each}
-  <button type="button" on:click={handleAddCategory}>Add Category</button>
+  <label>
+   Optional Image:
+   <input bind:files type="file" name="image-input" />
+  </label>
+  {#if type === FormTypes.EDIT && $currentItem?.image}
+   <button on:click={handleDeleteImage}>Delete Image</button>
+  {/if}
  </div>
+ {#each categories as category, index}
+  <label>
+   Category {index + 1}:
+   <input type="text" bind:value={category} />
+  </label>
+  {#if index > 0}
+   <button type="button" on:click={handleRemoveCategoryFactory(index)}>
+    Remove
+   </button>
+  {/if}
+  {#if invalidCategoriesIndexes.includes(index)}
+   <div class="error">Please, provide this category or remove it</div>
+  {/if}
+ {/each}
+ <button type="button" on:click={handleAddCategory}>Add Category</button>
  <button type="submit">
   {type === FormTypes.NEW ? 'Publish' : 'Update'}
  </button>

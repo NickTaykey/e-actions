@@ -1,8 +1,14 @@
+import {
+ getDownloadURL,
+ deleteObject,
+ uploadBytes,
+ ref,
+} from 'firebase/storage';
+import { ChangePageBehaviour, ImageStorageData } from './types';
 import { derived, get, writable } from 'svelte/store';
 import * as firestore from 'firebase/firestore';
-import { ChangePageBehaviour } from './types';
+import { db, storage } from './firebase';
 import { getAuth } from 'firebase/auth';
-import { db } from './firebase';
 
 import type {
  ItemFirebaseInput,
@@ -84,6 +90,7 @@ export const setItems = (
   const itemData = doc.data();
   itemsMap.set(doc.id, {
    offers: itemData.offers,
+   image: itemData.image,
    nameLowerCase: itemData.name.toLowerCase(),
    description: itemData.description as string,
    categories: itemData.categories as string[],
@@ -133,7 +140,7 @@ export const handleItemsLoading = async (
  return querySnapshot;
 };
 
-export const addItem = async (newItem: ItemFields) => {
+export const addItem = async (newItem: ItemFields, image: File | null) => {
  return new Promise<void>(
   async (resolve: () => void, reject: (e: unknown) => void) => {
    const { currentUser } = getAuth();
@@ -142,16 +149,22 @@ export const addItem = async (newItem: ItemFields) => {
     throw new Error('Create Item operation requires user authenticated');
    }
 
-   const inputData: ItemFirebaseInput = {
-    ...newItem,
-    nameLowerCase: newItem.name.toLowerCase(),
-    createdAt: firestore.serverTimestamp(),
-    userId: currentUser.uid,
-    views: 0,
-    questions: [],
-   };
-
    try {
+    let imageStorageData: ImageStorageData = null;
+    if (image) {
+     imageStorageData = await saveImagesOnCloudStorage(image);
+    }
+
+    const inputData: ItemFirebaseInput = {
+     ...newItem,
+     nameLowerCase: newItem.name.toLowerCase(),
+     createdAt: firestore.serverTimestamp(),
+     userId: currentUser.uid,
+     image: imageStorageData,
+     questions: [],
+     views: 0,
+    };
+
     const docRef = await firestore.addDoc(firebaseCollection, inputData);
 
     _items.update((items) => {
@@ -160,6 +173,7 @@ export const addItem = async (newItem: ItemFields) => {
       ...inputData,
       id: docRef.id,
       offers: [],
+      image: imageStorageData,
      });
      return Object.freeze(newMap);
     });
@@ -207,15 +221,25 @@ export const loadItems = () => {
  );
 };
 
-export const updateItem = (newItem: ItemFields, currentItem: Item) => {
+export const updateItem = (
+ newItem: ItemFields,
+ currentItem: Item,
+ image: File | null
+) => {
  return new Promise<Item>(
   async (resolve: (item: Item) => void, reject: (e: unknown) => void) => {
    try {
+    const [imageStorageData] = await Promise.all([
+     image && saveImagesOnCloudStorage(image),
+     currentItem.image && deleteObject(ref(storage, currentItem.image.id)),
+    ]);
+
     const docRef = firestore.doc(db, 'items', currentItem.id);
-    await firestore.updateDoc(docRef, { ...newItem });
+    await firestore.updateDoc(docRef, { ...newItem, image: imageStorageData });
     const item = {
      ...currentItem,
      ...newItem,
+     image: imageStorageData,
     } as Item;
 
     _items.update((items) => {
@@ -266,7 +290,10 @@ export const deleteItem = (item: Item) => {
  return new Promise<void>(
   async (resolve: () => void, reject: (e: unknown) => void) => {
    try {
-    await firestore.deleteDoc(firestore.doc(db, 'items', item.id));
+    await Promise.all([
+     firestore.deleteDoc(firestore.doc(db, 'items', item.id)),
+     item.image && deleteObject(ref(storage, item.image.id)),
+    ]);
 
     _items.update((items) => {
      if (items.size === 0) return items;
@@ -455,6 +482,26 @@ export const setOffer = (item: Item, amount: number) => {
     resolve();
    } catch (e: unknown) {
     console.error(e);
+    reject(e);
+   }
+  }
+ );
+};
+
+const saveImagesOnCloudStorage = (image: File) => {
+ return new Promise<ImageStorageData>(
+  async (
+   resolve: (imageStorageData: ImageStorageData) => void,
+   reject: (e: unknown) => void
+  ) => {
+   try {
+    const id = crypto.randomUUID();
+    const imageRef = ref(storage, id);
+    await uploadBytes(imageRef, image);
+    const url = await getDownloadURL(imageRef);
+    resolve({ url, id });
+   } catch (e: unknown) {
+    console.error('Unexpected error while uploading image on cloud storage!');
     reject(e);
    }
   }

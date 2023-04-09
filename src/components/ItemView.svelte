@@ -34,6 +34,10 @@
  <p>{$currentItem.description}</p>
  <div>{$currentItem.categories.join(', ')}</div>
 
+ {#if $currentItem.image}
+  <img src={$currentItem.image.url} alt={$currentItem.name} />
+ {/if}
+
  {#if $currentUser && $currentItem.userId === $currentUser.uid}
   <button on:click={toggleEditItemForm}>
    {showEditItemForm ? 'Close' : 'Edit'}

@@ -7,6 +7,7 @@ import {
  PUBLIC_FIREBASE_APP_ID,
 } from '$env/static/public';
 import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 import { initializeApp } from 'firebase/app';
 
 const firebaseConfig = {
@@ -19,8 +20,9 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+const storage = getStorage(app);
 const db = getFirestore(app);
 
-export { db };
+export { db, storage };
 
 export default app;
