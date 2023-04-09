@@ -8,8 +8,8 @@
   signInWithPopup,
   getAuth,
  } from 'firebase/auth';
+ import { Alert, Button, FormGroup, Input, Container } from 'sveltestrap';
  import { signInUser } from '../helpers/index';
- import _ from '../helpers/firebase';
 
  import type { User } from 'firebase/auth';
 
@@ -87,27 +87,36 @@
  });
 </script>
 
-<main>
+<Container>
  {#if errorMessage.length}
-  <div class="error">{errorMessage}</div>
+  <Alert color="danger">{errorMessage}</Alert>
  {/if}
  <div>
-  <button on:click={handleGithubSignIn}>Github</button>
-  <button on:click={handleGoogleSignIn}>Google</button>
+  <Button color="dark" class="w-100" on:click={handleGithubSignIn}>
+   Github
+  </Button>
+  <Button color="primary" class="w-100 my-2" on:click={handleGoogleSignIn}>
+   Google
+  </Button>
  </div>
+
+ <h3 class="text-center">Or</h3>
+
  <form on:submit|preventDefault={isSignIn ? handleSignIn : handleSignUp}>
-  <label>
-   Email:
-   <input type="email" bind:value={email} required />
-  </label>
-  <label>
-   Password:
-   <input type="password" bind:value={password} required />
-  </label>
-  <button type="submit">{isSignIn ? 'Sign In' : 'Sign Up'}</button>
+  <FormGroup floating label="Email">
+   <Input placeholder="Enter here" bind:value={email} required />
+  </FormGroup>
+  <FormGroup floating label="Password">
+   <Input placeholder="Enter here" bind:value={password} required />
+  </FormGroup>
+
+  <Button type="submit" class="w-100">
+   {isSignIn ? 'Sign In' : 'Sign Up'}
+  </Button>
+  <div class="my-3">
+   {isSignIn ? "Don't have an account?" : 'Already have an account?'}
+  </div>
+
+  <Button on:click={toggleForm}>{isSignIn ? 'Sign Up' : 'Sign In'}</Button>
  </form>
- <p>
-  {isSignIn ? "Don't have an account?" : 'Already have an account?'}
-  <button on:click={toggleForm}>{isSignIn ? 'Sign Up' : 'Sign In'}</button>
- </p>
-</main>
+</Container>

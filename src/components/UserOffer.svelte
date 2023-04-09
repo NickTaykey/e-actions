@@ -1,4 +1,5 @@
 <script lang="ts">
+ import { Alert, Label, Input, Button } from 'sveltestrap';
  import { currentItem } from '../helpers/items.store';
  import { setOffer } from '../helpers/items.store';
 
@@ -15,15 +16,13 @@
  };
 </script>
 
-<div>
- {#if showErrorAlert}
-  <div class="error">
-   Unexpected server side error, impossible to set offer.
-  </div>
- {/if}
- <label>
-  Amount:
-  <input type="number" bind:value={amount} />
- </label>
- <button on:click={handlePostOffer}>Post</button>
-</div>
+{#if showErrorAlert}
+ <Alert color="danger">
+  Unexpected server side error, impossible to set offer.
+ </Alert>
+{/if}
+<Label>
+ Amount:
+ <Input type="number" bind:value={amount} />
+</Label>
+<Button color="primary" on:click={handlePostOffer}>Post</Button>

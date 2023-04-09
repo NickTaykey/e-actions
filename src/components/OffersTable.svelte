@@ -4,6 +4,7 @@
   setAcceptedOffer,
   currentItem,
  } from '../helpers/items.store';
+ import { Table, Button } from 'sveltestrap';
  import { currentUser } from '../helpers';
 
  import type { Offer } from '../helpers/types';
@@ -13,7 +14,7 @@
  };
 </script>
 
-<table>
+<Table>
  <thead>
   <th>Offer</th>
   <th>User email</th>
@@ -25,10 +26,12 @@
     <td>{offer.email}</td>
     {#if $currentItem?.userId === $currentUser?.uid}
      <td>
-      <button on:click={handleAcceptOfferFactory(offer)}>Accept Offer</button>
+      <Button color="success" on:click={handleAcceptOfferFactory(offer)}>
+       Accept Offer
+      </Button>
      </td>
     {/if}
    </tr>
   {/each}
  </tbody>
-</table>
+</Table>

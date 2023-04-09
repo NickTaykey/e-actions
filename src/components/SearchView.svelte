@@ -1,5 +1,6 @@
 <script lang="ts">
  import { searchItem, showSearchResults } from '../helpers/items.store';
+ import { Button, FormGroup, Input, Container } from 'sveltestrap';
  import ItemCard from './ItemCard.svelte';
 
  import type { Item } from '../helpers/types';
@@ -20,25 +21,30 @@
  let name = '';
 </script>
 
-<form action="#" on:submit|preventDefault={handleFormSubmit}>
- <div>
-  <label>
-   Name
-   <input type="text" placeholder="Search by name" bind:value={name} />
-  </label>
+<div class="container my-3">
+ <div class="row">
+  <div class="col-12 col-lg-4">
+   <h3>Search Item</h3>
+   <form on:submit|preventDefault={handleFormSubmit} action="#">
+    <FormGroup floating label="Search by name">
+     <Input bind:value={name} placeholder="Type a name" />
+    </FormGroup>
+    <FormGroup floating label="Search by category">
+     <Input bind:value={category} placeholder="Type a category" />
+    </FormGroup>
+    <Button type="submit" color="info">Search</Button>
+    <Button type="reset" on:click={handleSearchReset} color="danger">
+     Reset
+    </Button>
+   </form>
+  </div>
  </div>
- <div>
-  <label>
-   Category
-   <input type="text" placeholder="Search By Category" bind:value={category} />
-  </label>
- </div>
- <button type="submit">Search</button>
- <button type="reset" on:click={handleSearchReset}>Reset</button>
-</form>
+</div>
 
 {#if $showSearchResults}
- {#each results as r}
-  <ItemCard item={r} />
- {/each}
+ <Container>
+  {#each results as r}
+   <ItemCard item={r} />
+  {/each}
+ </Container>
 {/if}

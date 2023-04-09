@@ -3,6 +3,7 @@
  import { questions } from '../helpers/questions.store';
  import QuestionForm from './QuestionForm.svelte';
  import QuestionView from './QuestionView.svelte';
+ import { Container, Button } from 'sveltestrap';
  import { FormTypes } from '../helpers/types';
  import OffersView from './OffersView.svelte';
  import ItemForm from './ItemForm.svelte';
@@ -28,33 +29,46 @@
 </script>
 
 {#if $currentItem}
- <h1>Item {$currentItem.name}</h1>
- <div>Views: {$currentItem.views}</div>
- <h2>Min. Offer: ${$currentItem.minPrice}</h2>
- <p>{$currentItem.description}</p>
- <div>{$currentItem.categories.join(', ')}</div>
+ <Container>
+  <div class="row">
+   <div class="col-12 col-lg-6">
+    <h1>{$currentItem.name}</h1>
+    <div>Views: {$currentItem.views}</div>
+    <h4 class="my-3">Min. Offer: ${$currentItem.minPrice}</h4>
+    <p>{$currentItem.description}</p>
+    <div class="mb-3">{$currentItem.categories.join(', ')}</div>
 
- {#if $currentItem.image}
-  <img src={$currentItem.image.url} alt={$currentItem.name} />
- {/if}
+    {#if $currentItem.image}
+     <img src={$currentItem.image.url} alt={$currentItem.name} />
+    {/if}
 
- {#if $currentUser && $currentItem.userId === $currentUser.uid}
-  <button on:click={toggleEditItemForm}>
-   {showEditItemForm ? 'Close' : 'Edit'}
-  </button>
-  <button on:click={handleDeleteItem}>Delete</button>
-  {#if showEditItemForm}
-   <ItemForm type={FormTypes.EDIT} />
-  {/if}
- {/if}
+    {#if $currentUser && $currentItem.userId === $currentUser.uid}
+     <div class="mb-3">
+      <Button color="warning" on:click={toggleEditItemForm}>
+       {showEditItemForm ? 'Close' : 'Edit'}
+      </Button>
+      <Button color="danger" on:click={handleDeleteItem}>Delete</Button>
+     </div>
+     {#if showEditItemForm}
+      <ItemForm type={FormTypes.EDIT} />
+     {/if}
+    {/if}
+   </div>
+   <div class="col-12 col-lg-6 mb-3">
+    <h2 class="my-3">Have a question?</h2>
+    {#if $currentUser !== null}
+     <QuestionForm type={FormTypes.NEW} />
+    {/if}
 
- {#if $currentUser !== null}
-  <QuestionForm type={FormTypes.NEW} />
- {/if}
-
- {#each $questions as question}
-  <QuestionView {question} />
- {/each}
+    {#each $questions as question}
+     <QuestionView {question} />
+    {/each}
+   </div>
+  </div>
+  <div class="row">
+   <div class="col-12">
+    <OffersView />
+   </div>
+  </div>
+ </Container>
 {/if}
-
-<OffersView />

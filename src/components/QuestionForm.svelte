@@ -1,6 +1,7 @@
 <script lang="ts">
  import { addQuestion, updateQuestion } from '../helpers/questions.store';
  import { currentItem } from '../helpers/items.store';
+ import { Input, Label, Button } from 'sveltestrap';
  import { FormTypes } from '../helpers/types';
  import { currentUser } from '../helpers';
 
@@ -11,8 +12,8 @@
  export let doesUserOwnsQuestion = false;
  export let isItemCreatorUser = false;
 
- let text = question !== null ? question.text : '';
  let answer = question !== null ? question.answer : '';
+ let text = question !== null ? question.text : '';
  let showValidationErrorAlert = false;
  let showErrorAlert = false;
 
@@ -51,28 +52,38 @@
 {#if showErrorAlert}
  <div class="error">Unexpected Error while creating the Question</div>
 {/if}
+
 <form action="#" on:submit|preventDefault={handleFormSubmit}>
  {#if doesUserOwnsQuestion || type === FormTypes.NEW}
-  <label>
+  <Label class="w-100 mt-2">
    Text:
-   <textarea bind:value={text} cols="30" rows="10" />
+   <Input type="textarea" bind:value={text} cols={30} rows={1} class="w-100" />
    {#if showValidationErrorAlert}
     <div class="error">Please, provide a valid text for the question</div>
    {/if}
-  </label>
- {/if}
- {#if isItemCreatorUser}
-  <label>
-   Answer:
-   <textarea bind:value={answer} cols="30" rows="10" />
-  </label>
+  </Label>
  {/if}
 
- <button type="submit">
+ <div>
+  {#if isItemCreatorUser}
+   <Label class="w-100 mt-2">
+    Answer:
+    <Input
+     class="w-100"
+     type="textarea"
+     bind:value={answer}
+     cols={30}
+     rows={1}
+    />
+   </Label>
+  {/if}
+ </div>
+
+ <Button type="submit" color="primary" class="w-100">
   {#if type === FormTypes.NEW}
    Post
   {:else}
    Update
   {/if}
- </button>
+ </Button>
 </form>

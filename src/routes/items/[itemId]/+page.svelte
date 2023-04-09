@@ -10,9 +10,11 @@
  import { signOutUser, signInUser } from '../../../helpers/index';
  import { getAuth, onAuthStateChanged } from 'firebase/auth';
  import ItemView from '../../../components/ItemView.svelte';
+ import { Alert } from 'sveltestrap';
  import { onMount } from 'svelte';
 
  import type { Item } from '../../../helpers/types';
+ import Navbar from '../../../components/Navbar.svelte';
 
  let errorAlertMessage = '';
 
@@ -42,8 +44,10 @@
  });
 </script>
 
+<Navbar />
+
 {#if errorAlertMessage.length}
- <div class="error">{errorAlertMessage}</div>
+ <Alert color="danger">{errorAlertMessage}</Alert>
 {/if}
 
 {#if $currentItem && !errorAlertMessage.length}

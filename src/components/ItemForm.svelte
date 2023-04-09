@@ -6,10 +6,19 @@
   addItem,
  } from '../helpers/items.store';
  import { validateFormFields } from '../helpers/index';
- import { FormTypes } from '../helpers/types';
- import { db, storage } from '../helpers/firebase';
  import { deleteObject, ref } from 'firebase/storage';
  import { doc, updateDoc } from 'firebase/firestore';
+ import { db, storage } from '../helpers/firebase';
+ import { FormTypes } from '../helpers/types';
+ import {
+  InputGroupText,
+  InputGroup,
+  FormGroup,
+  Button,
+  Label,
+  Input,
+  Alert,
+ } from 'sveltestrap';
 
  export let type: FormTypes;
 
@@ -69,8 +78,14 @@
  const handleAddCategory = () => (categories = [...categories, '']);
 
  const handleRemoveCategoryFactory = (index: number) => {
-  return () => {
-   if (categories.length === 1) return;
+  return (e: KeyboardEvent) => {
+   if (
+    e.code !== 'Backspace' ||
+    categories.length === 1 ||
+    categories[index].length
+   ) {
+    return;
+   }
    categories = categories.filter((_, idx) => idx !== index);
   };
  };
@@ -93,58 +108,68 @@
 {/if}
 
 <form on:submit|preventDefault={handleFormSubmit} novalidate>
- <div>
-  <label>
-   Name of the item:
-   <input type="text" bind:value={name} />
-  </label>
-  {#if invalidFieldsIndexes.includes(0)}
-   <div class="error">Please, provide a valid name for the item</div>
-  {/if}
- </div>
- <div>
-  <label>
-   Description:
-   <textarea bind:value={description} cols="30" rows="10" />
-  </label>
-  {#if invalidFieldsIndexes.includes(1)}
-   <div class="error">Please, provide a valid description for the item</div>
-  {/if}
- </div>
- <div>
-  <label>
-   min price:
-   <input type="number" bind:value={minPrice} min={1} />
-  </label>
-  {#if invalidFieldsIndexes.includes(2)}
-   <div class="error">Please, provide a valid minimum price for the item</div>
-  {/if}
- </div>
- <div>
-  <label>
-   Optional Image:
-   <input bind:files type="file" name="image-input" />
-  </label>
-  {#if type === FormTypes.EDIT && $currentItem?.image}
-   <button on:click={handleDeleteImage}>Delete Image</button>
-  {/if}
- </div>
+ <Label class="w-100">
+  Name of the item:
+  <Input bind:value={name} />
+ </Label>
+
+ {#if invalidFieldsIndexes.includes(0)}
+  <Alert color="danger">Please, provide a valid name for the item</Alert>
+ {/if}
+
+ <Label class="w-100">
+  Description:
+  <Input
+   bind:value={description}
+   type="textarea"
+   class="w-100"
+   cols={30}
+   rows={1}
+  />
+ </Label>
+
+ {#if invalidFieldsIndexes.includes(1)}
+  <Alert color="danger">Please, provide a valid description for the item</Alert>
+ {/if}
+
+ <Label class="w-100">
+  min price:
+  <Input type="number" bind:value={minPrice} min={1} />
+ </Label>
+
+ {#if invalidFieldsIndexes.includes(2)}
+  <Alert color="danger">
+   Please, provide a valid minimum price for the item
+  </Alert>
+ {/if}
+
+ <Label class="w-100">
+  Optional Image:
+  <Input type="file" bind:files />
+ </Label>
+
+ {#if type === FormTypes.EDIT && $currentItem?.image}
+  <Button color="danger" on:click={handleDeleteImage}>Delete Image</Button>
+ {/if}
+
  {#each categories as category, index}
-  <label>
-   Category {index + 1}:
-   <input type="text" bind:value={category} />
-  </label>
-  {#if index > 0}
-   <button type="button" on:click={handleRemoveCategoryFactory(index)}>
-    Remove
-   </button>
-  {/if}
+  <Label class="w-100">
+   Category {index + 1}
+   <Input
+    on:keydown={handleRemoveCategoryFactory(index)}
+    bind:value={category}
+   />
+  </Label>
   {#if invalidCategoriesIndexes.includes(index)}
-   <div class="error">Please, provide this category or remove it</div>
+   <Alert color="danger">Please, provide this category or remove it</Alert>
   {/if}
  {/each}
- <button type="button" on:click={handleAddCategory}>Add Category</button>
- <button type="submit">
+
+ <Button color="success" type="button" on:click={handleAddCategory}>
+  Add Category
+ </Button>
+
+ <Button color="primary" type="submit">
   {type === FormTypes.NEW ? 'Publish' : 'Update'}
- </button>
+ </Button>
 </form>

@@ -19,6 +19,7 @@
   const snapshot = await handleItemsLoading(ChangePageBehaviour.NEXT, 'views');
   setItems(snapshot, null);
  };
+
  const hanldePrevPageClick = () => {
   currentPageNumber = currentPageNumber - 1;
  };
@@ -33,7 +34,7 @@
 </script>
 
 <div>
- <h2>Hottest items for sale!</h2>
+ <h2 class="text-center my-3">Hottest items for sale!</h2>
  {#if showErrorAlert}
   <ItemsListErrorAlert />
  {:else}

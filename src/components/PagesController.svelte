@@ -1,4 +1,5 @@
 <script lang="ts">
+ import { Pagination, PaginationItem, PaginationLink } from 'sveltestrap';
  import { nItemsPublished, itemsPerPage } from '../helpers/items.store';
 
  export let hanldeNextPageClick = () => {};
@@ -6,27 +7,22 @@
  export let currentPageNumber = 1;
 </script>
 
-<div class="page-controller">
+<Pagination class="d-flex justify-content-center my-3">
  {#if currentPageNumber > 1}
-  <button on:click={hanldePrevPageClick}>
-   {'<'}
-  </button>
+  <PaginationItem>
+   <PaginationLink on:click={hanldePrevPageClick} previous href="#" />
+  </PaginationItem>
  {/if}
  {#each Array(Math.ceil($nItemsPublished / itemsPerPage)) as _, i}
-  <div class={currentPageNumber === i + 1 ? 'current-page' : ''}>{i + 1}</div>
+  <PaginationItem class={currentPageNumber === i + 1 ? 'active' : ''}>
+   <PaginationLink>
+    {i + 1}
+   </PaginationLink>
+  </PaginationItem>
  {/each}
  {#if currentPageNumber < Math.ceil($nItemsPublished / itemsPerPage)}
-  <button on:click={hanldeNextPageClick}>
-   {'>'}
-  </button>
+  <PaginationItem>
+   <PaginationLink on:click={hanldeNextPageClick} next href="#" />
+  </PaginationItem>
  {/if}
-</div>
-
-<style>
- .page-controller {
-  display: flex;
- }
- .current-page {
-  color: red;
- }
-</style>
+</Pagination>
