@@ -15,6 +15,7 @@
  import { onMount } from 'svelte';
 
  import type { Item } from '../../../helpers/types';
+ import LoadingScreen from '../../../components/LoadingScreen.svelte';
 
  let errorAlertMessage = '';
 
@@ -57,6 +58,10 @@
  </Alert>
 {/if}
 
-{#if $currentItem && !errorAlertMessage.length}
- <ItemView />
+{#if !errorAlertMessage.length}
+ {#if $currentItem}
+  <ItemView />
+ {:else}
+  <LoadingScreen />
+ {/if}
 {/if}

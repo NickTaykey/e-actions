@@ -29,14 +29,23 @@
 </script>
 
 {#if $currentItem}
- <Container class="mt-5">
+ <Container class="mt-4">
   <div class="row">
    <div class="col-12 col-lg-6">
     <h1>{$currentItem.name}</h1>
     <div>Views: {$currentItem.views}</div>
     <h4 class="my-3">Min. Offer: ${$currentItem.minPrice}</h4>
     <p>{$currentItem.description}</p>
-    <div class="mb-3">{$currentItem.categories.join(', ')}</div>
+    <div class="my-3">
+     {#each $currentItem.categories as category}
+      <span
+       class="badge text-bg-secondary d-inline-block"
+       style="margin-right: 2px;"
+      >
+       {category}
+      </span>
+     {/each}
+    </div>
 
     {#if $currentItem.image}
      <img
@@ -59,8 +68,9 @@
      {/if}
     {/if}
    </div>
+
    <div class="col-12 col-lg-6 mb-3">
-    <h2 class="my-3">Have a question?</h2>
+    <h3>Have a question?</h3>
     {#if $currentUser !== null}
      <QuestionForm type={FormTypes.NEW} />
     {/if}
@@ -70,6 +80,7 @@
     {/each}
    </div>
   </div>
+
   <div class="row">
    <div class="col-12">
     <OffersView />

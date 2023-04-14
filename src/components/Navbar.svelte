@@ -16,12 +16,15 @@
  import ItemForm from '../components/Item/ItemForm.svelte';
  import { FormTypes } from '../helpers/types';
  import AuthPanel from './AuthPanel.svelte';
+ // import seedDB from '../helpers/seeds';
 
  const auth = getAuth();
 
  onAuthStateChanged(auth, (user) => {
-  if (user !== null) signInUser(user);
-  else signOutUser();
+  if (user !== null) {
+   signInUser(user);
+   // seedDB();
+  } else signOutUser();
  });
 
  let isNavbarOpen = false;
@@ -50,8 +53,8 @@
  </ModalBody>
 </Modal>
 
-<Navbar color="light" light expand="lg">
- <NavbarBrand href="/" class="me-auto">E-Actions</NavbarBrand>
+<Navbar color="light" light expand="lg" fixed="top">
+ <NavbarBrand href="/items" class="me-auto">E-Actions</NavbarBrand>
  <NavbarToggler on:click={() => (isNavbarOpen = !isNavbarOpen)} />
  <Collapse isOpen={isNavbarOpen} navbar expand="lg" on:update={handleUpdate}>
   <Nav class="ms-auto d-flex align-items-lg-center" navbar>

@@ -1,10 +1,17 @@
 <script lang="ts">
- import { Alert, Label, Input, Button } from 'sveltestrap';
+ import {
+  InputGroupText,
+  InputGroup,
+  Button,
+  Input,
+  Alert,
+  Label,
+ } from 'sveltestrap';
  import { currentItem } from '../../helpers/items.store';
  import { setOffer } from '../../helpers/items.store';
 
  let showErrorAlert = false;
- let amount = 0;
+ let amount = $currentItem?.minPrice || 0;
 
  const handlePostOffer = async () => {
   try {
@@ -16,15 +23,18 @@
  };
 </script>
 
-<div class="mb-3">
+<div class="mb-3 w-50">
  {#if showErrorAlert}
   <Alert color="danger">
    Unexpected server side error, impossible to set offer.
   </Alert>
  {/if}
- <Label>
-  Amount:
-  <Input type="number" bind:value={amount} />
+ <Label class="d-block w-100">
+  Make an offer:
+  <InputGroup>
+   <InputGroupText>$</InputGroupText>
+   <Input type="number" bind:value={amount} />
+  </InputGroup>
  </Label>
- <Button color="primary" on:click={handlePostOffer}>Post</Button>
+ <Button color="primary" block on:click={handlePostOffer}>Post</Button>
 </div>

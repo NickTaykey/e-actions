@@ -8,20 +8,29 @@
  import LatestItemsView from '../../components/Item/LatestItemsView.svelte';
  import SearchView from '../../components/SearchView.svelte';
  import Navbar from '../../components/Navbar.svelte';
- import seedDB from '../../helpers/seeds';
  import { onMount } from 'svelte';
+ import LoadingScreen from '../../components/LoadingScreen.svelte';
 
- onMount(() => {
-  seedDB();
+ let isLoading = false;
+
+ onMount(async () => {
   $showSearchResults = false;
-  if ($items.size === 0) loadItems();
+  if ($items.size === 0) {
+   isLoading = true;
+   await loadItems();
+   isLoading = false;
+  }
  });
 </script>
 
-<Navbar />
-<SearchView />
+{#if isLoading}
+ <LoadingScreen />
+{:else}
+ <Navbar />
+ <SearchView />
 
-{#if !$showSearchResults}
- <HottestItemsView />
- <LatestItemsView />
+ {#if !$showSearchResults}
+  <HottestItemsView />
+  <LatestItemsView />
+ {/if}
 {/if}

@@ -56,7 +56,7 @@
 <form action="#" on:submit|preventDefault={handleFormSubmit} class="w-100">
  {#if doesUserOwnsQuestion || type === FormTypes.NEW}
   <Label class="w-100 mt-2">
-   Text:
+   Write here:
    <Input type="textarea" bind:value={text} cols={30} rows={1} class="w-100" />
    {#if showValidationErrorAlert}
     <div class="error">Please, provide a valid text for the question</div>
@@ -79,9 +79,9 @@
   {/if}
  </div>
 
- <Button type="submit" color="primary" class="w-100 mb-2">
+ <Button type="submit" color="success" class="w-100 mb-2">
   {#if type === FormTypes.NEW}
-   Post
+   Ask
   {:else}
    Update
   {/if}
