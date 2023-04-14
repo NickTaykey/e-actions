@@ -1,7 +1,7 @@
 <script lang="ts">
  import { searchItem, showSearchResults } from '../helpers/items.store';
  import { Button, FormGroup, Input, Container } from 'sveltestrap';
- import ItemCard from './ItemCard.svelte';
+ import ItemCard from './Item/ItemCard.svelte';
 
  import type { Item } from '../helpers/types';
 
@@ -42,7 +42,7 @@
 </div>
 
 {#if $showSearchResults}
- <Container>
+ <Container class="mt-3">
   {#each results as r}
    <ItemCard item={r} />
   {/each}

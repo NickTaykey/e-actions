@@ -57,9 +57,6 @@ export const addQuestion = (text: string, item: Item) => {
    } catch (e) {
     reject(e);
     console.error(e);
-    throw new Error(
-     'Unexpected Error while adding a document to Cloud Firestore'
-    );
    }
   }
  );
@@ -69,19 +66,17 @@ export const loadItemQuestions = (currentItem: Item) => {
  return new Promise<void>(
   async (resolve: () => void, reject: (e: unknown) => void) => {
    try {
-    const questions = await Promise.all(
+    const questionSnapshots = await Promise.all(
      currentItem.questions.map((q) => {
       return firebase.getDoc(firebase.doc(db, 'questions', q));
      })
     );
 
-    const questionsData = questions.map((q) => {
-     let data = q.data();
-     if (!data) {
-      throw new Error('Unexpected Error while loading questions of the Item');
-     }
-     return { id: q.id, ...data } as Question;
-    });
+    const questionsData: Question[] = [];
+    for (const qs of questionSnapshots) {
+     let data = qs.data();
+     if (data) questionsData.push({ id: qs.id, ...data } as Question);
+    }
 
     _questions.set(
      Object.freeze([...questionsData.map((_, i, a) => a[a.length - 1 - i])])
@@ -91,9 +86,6 @@ export const loadItemQuestions = (currentItem: Item) => {
    } catch (e) {
     reject(e);
     console.error(e);
-    throw new Error(
-     'Unexpected Error while adding a document to Cloud Firestore'
-    );
    }
   }
  );
@@ -122,9 +114,6 @@ export const deleteQuestion = (questionId: string, item: Item) => {
    } catch (e) {
     reject(e);
     console.error(e);
-    throw new Error(
-     'Unexpected Error while adding a document to Cloud Firestore'
-    );
    }
   }
  );
@@ -169,9 +158,6 @@ export const updateQuestion = (
    } catch (e) {
     reject(e);
     console.error(e);
-    throw new Error(
-     'Unexpected Error while adding a document to Cloud Firestore'
-    );
    }
   }
  );

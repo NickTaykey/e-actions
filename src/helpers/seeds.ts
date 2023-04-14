@@ -24,6 +24,7 @@ const seedDB = async () => {
     .fill(null)
     .map(() => faker.science.chemicalElement().name),
    userId: get(currentUser)!.uid,
+   image: null,
   } as ItemFirebaseInput);
  }
 

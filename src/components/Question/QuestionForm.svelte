@@ -1,11 +1,11 @@
 <script lang="ts">
- import { addQuestion, updateQuestion } from '../helpers/questions.store';
- import { currentItem } from '../helpers/items.store';
+ import { addQuestion, updateQuestion } from '../../helpers/questions.store';
+ import { currentItem } from '../../helpers/items.store';
  import { Input, Label, Button } from 'sveltestrap';
- import { FormTypes } from '../helpers/types';
- import { currentUser } from '../helpers';
+ import { FormTypes } from '../../helpers/types';
+ import { currentUser } from '../../helpers';
 
- import type { Question } from '../helpers/types';
+ import type { Question } from '../../helpers/types';
 
  export let question: Question | null = null;
  export let type: FormTypes = FormTypes.NEW;
@@ -53,7 +53,7 @@
  <div class="error">Unexpected Error while creating the Question</div>
 {/if}
 
-<form action="#" on:submit|preventDefault={handleFormSubmit}>
+<form action="#" on:submit|preventDefault={handleFormSubmit} class="w-100">
  {#if doesUserOwnsQuestion || type === FormTypes.NEW}
   <Label class="w-100 mt-2">
    Text:
@@ -79,7 +79,7 @@
   {/if}
  </div>
 
- <Button type="submit" color="primary" class="w-100">
+ <Button type="submit" color="primary" class="w-100 mb-2">
   {#if type === FormTypes.NEW}
    Post
   {:else}

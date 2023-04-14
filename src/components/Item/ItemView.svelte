@@ -1,13 +1,13 @@
 <script lang="ts">
- import { currentItem, deleteItem } from '../helpers/items.store';
- import { questions } from '../helpers/questions.store';
- import QuestionForm from './QuestionForm.svelte';
- import QuestionView from './QuestionView.svelte';
+ import { currentItem, deleteItem } from '../../helpers/items.store';
+ import QuestionForm from '../Question/QuestionForm.svelte';
+ import QuestionView from '../Question/QuestionView.svelte';
+ import { questions } from '../../helpers/questions.store';
+ import OffersView from '../Offer/OffersView.svelte';
  import { Container, Button } from 'sveltestrap';
- import { FormTypes } from '../helpers/types';
- import OffersView from './OffersView.svelte';
+ import { FormTypes } from '../../helpers/types';
+ import { currentUser } from '../../helpers';
  import ItemForm from './ItemForm.svelte';
- import { currentUser } from '../helpers';
  import { goto } from '$app/navigation';
  import { get } from 'svelte/store';
 
@@ -29,7 +29,7 @@
 </script>
 
 {#if $currentItem}
- <Container>
+ <Container class="mt-5">
   <div class="row">
    <div class="col-12 col-lg-6">
     <h1>{$currentItem.name}</h1>
@@ -39,7 +39,12 @@
     <div class="mb-3">{$currentItem.categories.join(', ')}</div>
 
     {#if $currentItem.image}
-     <img src={$currentItem.image.url} alt={$currentItem.name} />
+     <img
+      src={$currentItem.image.url}
+      alt={$currentItem.name}
+      style="width: 200px"
+      class="my-4"
+     />
     {/if}
 
     {#if $currentUser && $currentItem.userId === $currentUser.uid}

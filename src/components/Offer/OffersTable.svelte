@@ -3,11 +3,11 @@
   currentItemOffers,
   setAcceptedOffer,
   currentItem,
- } from '../helpers/items.store';
+ } from '../../helpers/items.store';
  import { Table, Button } from 'sveltestrap';
- import { currentUser } from '../helpers';
+ import { currentUser } from '../../helpers';
 
- import type { Offer } from '../helpers/types';
+ import type { Offer } from '../../helpers/types';
 
  const handleAcceptOfferFactory = (offer: Offer) => {
   return () => setAcceptedOffer(offer);

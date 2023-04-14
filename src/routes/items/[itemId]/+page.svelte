@@ -8,13 +8,13 @@
  } from '../../../helpers/items.store';
  import { loadItemQuestions } from '../../../helpers/questions.store';
  import { signOutUser, signInUser } from '../../../helpers/index';
+ import ItemView from '../../../components/Item/ItemView.svelte';
  import { getAuth, onAuthStateChanged } from 'firebase/auth';
- import ItemView from '../../../components/ItemView.svelte';
+ import Navbar from '../../../components/Navbar.svelte';
  import { Alert } from 'sveltestrap';
  import { onMount } from 'svelte';
 
  import type { Item } from '../../../helpers/types';
- import Navbar from '../../../components/Navbar.svelte';
 
  let errorAlertMessage = '';
 
@@ -27,15 +27,20 @@
   try {
    const itemId = window.location.pathname.split('/').at(-1)!;
 
-   if ($currentItem === null || $items.size === 0) {
-    const item = await loadCurrentItem(itemId);
-    setCurrentItem({ ...item, offers: item.offers || [] });
-   } else if ($items.has($currentItem.id)) {
+   if ($currentItem && $items.has($currentItem.id)) {
     setCurrentItem($items.get(itemId) as Item);
    }
 
-   loadItemOffers($currentItem!);
-   loadItemQuestions($currentItem!);
+   if ($currentItem === null || $items.size === 0) {
+    const item = await loadCurrentItem(itemId);
+    if (item) setCurrentItem({ ...item, offers: item.offers || [] });
+    else errorAlertMessage = '404 Item not found';
+   }
+
+   if ($currentItem) {
+    loadItemQuestions($currentItem);
+    loadItemOffers($currentItem);
+   }
   } catch (e) {
    console.error(e);
    errorAlertMessage =
@@ -47,7 +52,9 @@
 <Navbar />
 
 {#if errorAlertMessage.length}
- <Alert color="danger">{errorAlertMessage}</Alert>
+ <Alert color="danger" class="text-center mt-5 mx-auto w-75">
+  {errorAlertMessage}
+ </Alert>
 {/if}
 
 {#if $currentItem && !errorAlertMessage.length}

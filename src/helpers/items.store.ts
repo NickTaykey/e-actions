@@ -142,8 +142,8 @@ export const handleItemsLoading = async (
 };
 
 export const addItem = async (newItem: ItemFields, image: File | null) => {
- return new Promise<void>(
-  async (resolve: () => void, reject: (e: unknown) => void) => {
+ return new Promise<Item>(
+  async (resolve: (item: Item) => void, reject: (e: unknown) => void) => {
    const { currentUser } = getAuth();
 
    if (currentUser === null) {
@@ -167,16 +167,17 @@ export const addItem = async (newItem: ItemFields, image: File | null) => {
     };
 
     const docRef = await firestore.addDoc(firebaseCollection, inputData);
+    const newItemObject = {
+     ...inputData,
+     id: docRef.id,
+     offers: [],
+     image: imageStorageData,
+     acceptedOffer: null,
+    };
 
     _items.update((items) => {
      const newMap = new Map(items);
-     newMap.set(docRef.id, {
-      ...inputData,
-      id: docRef.id,
-      offers: [],
-      image: imageStorageData,
-      acceptedOffer: null,
-     });
+     newMap.set(docRef.id, newItemObject);
      return Object.freeze(newMap);
     });
 
@@ -188,7 +189,7 @@ export const addItem = async (newItem: ItemFields, image: File | null) => {
     });
     _nItemsPublished.update((nItemsPublished) => 1 + nItemsPublished);
 
-    resolve();
+    resolve(newItemObject);
    } catch (e) {
     reject(e);
     console.error(e);
@@ -323,9 +324,6 @@ export const deleteItem = (item: Item) => {
    } catch (e) {
     reject(e);
     console.error(e);
-    throw new Error(
-     'Unexpected Error while deleting a document to Cloud Firestore'
-    );
    }
   }
  );
@@ -346,28 +344,28 @@ export const loadPage = (behaviour: ChangePageBehaviour) => {
    } catch (e) {
     reject(e);
     console.error(e);
-    throw new Error(
-     'Unexpected error while loading documents from Firebase Cloud Store'
-    );
    }
   }
  );
 };
 
 export const loadCurrentItem = (itemId: string) => {
- return new Promise<Item>(
-  async (resolve: (item: Item) => void, reject: (e: unknown) => void) => {
+ return new Promise<Item | null>(
+  async (
+   resolve: (item: Item | null) => void,
+   reject: (e: unknown) => void
+  ) => {
    try {
     const docRef = firestore.doc(db, 'items', itemId);
 
     const itemSnapshot = await firestore.getDoc(docRef);
-    const itemData = itemSnapshot.data();
+
+    if (!itemSnapshot.exists()) return resolve(null);
+
+    const itemData = itemSnapshot.data()!;
 
     firestore.updateDoc(docRef, { views: firestore.increment(1) });
 
-    if (!itemData) {
-     throw new Error(`No items with id: ${itemId} was found!`);
-    }
     if (!itemData.offers) itemData.offers = [];
     if (!itemData.acceptedOffer) itemData.acceptedOffer = null;
 
@@ -394,9 +392,6 @@ export const loadCurrentItem = (itemId: string) => {
    } catch (e) {
     reject(e);
     console.error(e);
-    throw new Error(
-     'Unexpected error while loading documents from Firebase Cloud Store'
-    );
    }
   }
  );
@@ -429,7 +424,7 @@ export const searchItem = (name: string | null, category: string | null) => {
     }
 
     const snapshots = await Promise.all(
-     queries.filter((q) => q !== undefined).map((q) => firestore.getDocs(q))
+     queries.map((q) => firestore.getDocs(q))
     );
 
     const resultsMap = new Map<string, Item>();
@@ -437,10 +432,7 @@ export const searchItem = (name: string | null, category: string | null) => {
     for (const s of snapshots.map((s) => s.docs).flat()) {
      if (!resultsMap.has(s.id)) {
       const data = s.data();
-      if (!data) {
-       throw new Error('Unexpected Error while loading questions of the Item');
-      }
-      resultsMap.set(s.id, { ...s.data(), id: s.id } as Item);
+      if (data) resultsMap.set(s.id, { ...s.data(), id: s.id } as Item);
      }
     }
 

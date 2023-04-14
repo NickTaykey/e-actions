@@ -4,21 +4,14 @@
   currentItem,
   updateItem,
   addItem,
- } from '../helpers/items.store';
- import { validateFormFields } from '../helpers/index';
+ } from '../../helpers/items.store';
+ import { Button, Label, Input, Alert } from 'sveltestrap';
+ import { validateFormFields } from '../../helpers/index';
  import { deleteObject, ref } from 'firebase/storage';
+ import { db, storage } from '../../helpers/firebase';
  import { doc, updateDoc } from 'firebase/firestore';
- import { db, storage } from '../helpers/firebase';
- import { FormTypes } from '../helpers/types';
- import {
-  InputGroupText,
-  InputGroup,
-  FormGroup,
-  Button,
-  Label,
-  Input,
-  Alert,
- } from 'sveltestrap';
+ import { FormTypes } from '../../helpers/types';
+ import { goto } from '$app/navigation';
 
  export let type: FormTypes;
 
@@ -51,12 +44,13 @@
 
   try {
    if (type === FormTypes.NEW) {
-    await addItem(fields, files.item(0));
+    const newItem = await addItem(fields, files.item(0))!;
     categories = [''];
     description = '';
     minPrice = 10;
     name = '';
-    window.alert('Item successfully posted!');
+    setCurrentItem(newItem);
+    goto(`/items/${newItem.id}`);
    } else if (currentItem) {
     const updatedItem = await updateItem(
      {

@@ -13,9 +13,9 @@
  } from 'sveltestrap';
  import { currentUser, signInUser, signOutUser } from '../helpers';
  import { getAuth, onAuthStateChanged } from 'firebase/auth';
+ import ItemForm from '../components/Item/ItemForm.svelte';
  import { FormTypes } from '../helpers/types';
  import AuthPanel from './AuthPanel.svelte';
- import ItemForm from './ItemForm.svelte';
 
  const auth = getAuth();
 
@@ -70,9 +70,9 @@
      </Button>
     </NavItem>
    {:else}
-    <Button color="primary" class="my-3" on:click={toggleAuthModal}
-     >SignIn</Button
-    >
+    <Button color="primary" class="my-3" on:click={toggleAuthModal}>
+     SignIn
+    </Button>
    {/if}
   </Nav>
  </Collapse>

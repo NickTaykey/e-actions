@@ -1,11 +1,12 @@
 <script lang="ts">
- import { currentItem, setCurrentItem } from '../helpers/items.store';
- import { deleteQuestion } from '../helpers/questions.store';
+ import { currentItem, setCurrentItem } from '../../helpers/items.store';
+ import { deleteQuestion } from '../../helpers/questions.store';
  import QuestionForm from './QuestionForm.svelte';
- import { FormTypes } from '../helpers/types';
- import { currentUser } from '../helpers';
+ import { FormTypes } from '../../helpers/types';
+ import { currentUser } from '../../helpers';
+ import { Button } from 'sveltestrap';
 
- import type { Question } from '../helpers/types';
+ import type { Question } from '../../helpers/types';
 
  export let question: Question;
 
@@ -27,7 +28,7 @@
  const doesUserOwnsQuestion = $currentUser?.uid === question?.userId;
 </script>
 
-<article>
+<article class="my-4">
  {#if question.text.length > 50}
   <p>{question.text.substring(0, 50)} ...</p>
   <button on:click={handleExpandTextClick}>Expand Text</button>
@@ -38,7 +39,7 @@
   <p>{question.answer}</p>
  {/if}
  {#if isItemCreatorUser || doesUserOwnsQuestion}
-  <button on:click={toggleEditQuestionForm}>
+  <Button color="warning" class="mb-2 w-100" on:click={toggleEditQuestionForm}>
    {#if showEditQuestionForm}
     Close
    {:else if doesUserOwnsQuestion}
@@ -46,7 +47,7 @@
    {:else}
     Answer
    {/if}
-  </button>
+  </Button>
   {#if showEditQuestionForm}
    <QuestionForm
     type={FormTypes.EDIT}
@@ -57,6 +58,8 @@
   {/if}
  {/if}
  {#if doesUserOwnsQuestion}
-  <button on:click={handleDeleteQuestion}>Delete</button>
+  <Button color="danger" class="w-100" on:click={handleDeleteQuestion}>
+   Delete
+  </Button>
  {/if}
 </article>
