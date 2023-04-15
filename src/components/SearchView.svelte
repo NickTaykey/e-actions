@@ -43,8 +43,12 @@
 
 {#if $showSearchResults}
  <Container class="mt-3">
-  {#each results as r}
-   <ItemCard item={r} />
-  {/each}
+  <div class="row">
+   {#each results as r}
+    <div class="col-12 col-md-6 col-lg-4 mb-3">
+     <ItemCard item={r} />
+    </div>
+   {/each}
+  </div>
  </Container>
 {/if}

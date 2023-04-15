@@ -36,17 +36,18 @@
  }
 </script>
 
-<div>
+<div style="height: 25vh">
  <h2 class="text-center my-3">Latest items for sale!</h2>
+
+ <PagesController
+  {currentPageNumber}
+  {hanldeNextPageClick}
+  {hanldePrevPageClick}
+ />
+
  {#if showErrorAlert}
   <ItemsListErrorAlert />
  {:else}
   <ItemListsView {currentPageItemsIds} />
  {/if}
 </div>
-
-<PagesController
- {currentPageNumber}
- {hanldeNextPageClick}
- {hanldePrevPageClick}
-/>

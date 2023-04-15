@@ -16,7 +16,7 @@
 
  const handleDeleteItem = async () => {
   try {
-   if (currentItem === null) return;
+   if ($currentItem === null) return;
    await deleteItem(get(currentItem)!);
    goto('/', { replaceState: true });
   } catch (e) {

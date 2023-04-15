@@ -234,11 +234,16 @@ export const updateItem = (
    try {
     const [imageStorageData] = await Promise.all([
      image && saveImagesOnCloudStorage(image),
-     currentItem.image && deleteObject(ref(storage, currentItem.image.id)),
+     image &&
+      currentItem.image &&
+      deleteObject(ref(storage, currentItem.image.id)),
     ]);
 
     const docRef = firestore.doc(db, 'items', currentItem.id);
-    await firestore.updateDoc(docRef, { ...newItem, image: imageStorageData });
+    await firestore.updateDoc(docRef, {
+     ...newItem,
+     image: imageStorageData || currentItem.image || null,
+    });
     const item = {
      ...currentItem,
      ...newItem,

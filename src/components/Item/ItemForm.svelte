@@ -44,7 +44,7 @@
 
   try {
    if (type === FormTypes.NEW) {
-    const newItem = await addItem(fields, files.item(0))!;
+    const newItem = await addItem(fields, files ? files.item(0) : null)!;
     categories = [''];
     description = '';
     minPrice = 10;
@@ -60,11 +60,12 @@
       name,
      },
      $currentItem!,
-     files.item(0)
+     files ? files.item(0) : null
     );
     setCurrentItem(updatedItem);
    }
   } catch (e) {
+   console.error(e);
    showErrorAlert = true;
   }
  };

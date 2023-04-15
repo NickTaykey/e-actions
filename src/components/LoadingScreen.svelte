@@ -1,8 +1,10 @@
 <script lang="ts">
  import { Spinner } from 'sveltestrap';
+ export let width = '100vw';
+ export let height = '100vh';
 </script>
 
-<div class="loading-screen">
+<div class="loading-screen" style={`width: ${width}; height: ${height}`}>
  <div class="spinners-group">
   <Spinner type="grow" color="secondary" />
   <Spinner type="grow" color="secondary" class="mx-2" />
@@ -11,10 +13,6 @@
 </div>
 
 <style>
- .loading-screen {
-  width: 100vw;
-  height: 100vh;
- }
  .spinners-group {
   position: absolute;
   top: 50%;

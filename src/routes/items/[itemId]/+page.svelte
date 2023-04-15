@@ -18,6 +18,7 @@
  import LoadingScreen from '../../../components/LoadingScreen.svelte';
 
  let errorAlertMessage = '';
+ let isPageLoading = true;
 
  onAuthStateChanged(getAuth(), (user) => {
   if (user !== null) signInUser(user);
@@ -39,6 +40,7 @@
    }
 
    if ($currentItem) {
+    isPageLoading = false;
     loadItemQuestions($currentItem);
     loadItemOffers($currentItem);
    }
@@ -50,18 +52,16 @@
  });
 </script>
 
-<Navbar />
-
-{#if errorAlertMessage.length}
- <Alert color="danger" class="text-center mt-5 mx-auto w-75">
-  {errorAlertMessage}
- </Alert>
-{/if}
-
-{#if !errorAlertMessage.length}
- {#if $currentItem}
+{#if isPageLoading}
+ <LoadingScreen />
+{:else}
+ <Navbar />
+ {#if errorAlertMessage.length}
+  <Alert color="danger" class="text-center mt-5 mx-auto w-75">
+   {errorAlertMessage}
+  </Alert>
+ {/if}
+ {#if !errorAlertMessage.length && $currentItem}
   <ItemView />
- {:else}
-  <LoadingScreen />
  {/if}
 {/if}

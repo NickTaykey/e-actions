@@ -33,17 +33,16 @@
  }
 </script>
 
-<div>
- <h2 class="text-center my-3">Hottest items for sale!</h2>
- {#if showErrorAlert}
-  <ItemsListErrorAlert />
- {:else}
-  <ItemListsView {currentPageItemsIds} />
- {/if}
-</div>
+<h2 class="text-center my-3">Hottest items for sale!</h2>
 
 <PagesController
  {currentPageNumber}
  {hanldeNextPageClick}
  {hanldePrevPageClick}
 />
+
+{#if showErrorAlert}
+ <ItemsListErrorAlert />
+{:else}
+ <ItemListsView {currentPageItemsIds} />
+{/if}
